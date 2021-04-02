@@ -48,14 +48,6 @@ int main() {
 
 	u32 const tachyonVer = iplSysregGetTachyonVersion();
 
-#ifdef RESET_EXPLOIT
-	//Due to the reset exploit, we accidentally enabled
-	//more devices than should be enabled at this point.
-	//bits high (device in reset) are for:
-	//USB_HOST, ATA_HDD, MS_1, ATA, USB, AVC, VME, ME
-	memoryK1(REG_RESET_ENABLE) |= 0x32F4;
-#endif
-
 	auto const preIplDcacheWritebackInvalidateAll = tachyonVer >= TACHYON_0x600000 ? newPreIplDcacheWritebackInvalidateAll : oldPreIplDcacheWritebackInvalidateAll;
 	auto const preIplIcacheInvalidateAll = tachyonVer >= TACHYON_0x600000 ? newPreIplIcacheInvalidateAll : oldPreIplIcacheInvalidateAll;
 	auto const preIplMsReadSector = tachyonVer >= TACHYON_0x600000 ? newPreIplMsReadSector : oldPreIplMsReadSector;

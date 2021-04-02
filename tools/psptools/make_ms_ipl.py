@@ -36,7 +36,7 @@ if args.legacy:
     padding = bytearray(0x1000 - len(block_enc)) #pad with zeros to IPL block size, i.e. 0x1000 bytes
     block_enc = block_enc + padding
 else:
-    header = ipl_header(0xBC10004C, 4, 0, 0) + struct.pack('<III', 0x6, 0, 0) #reset exploit; 0x6 is SC and ME reset bit
+    header = ipl_header(0xBC10004C, 4, 0x10000004, 0) + struct.pack('<III', 0x32F6, 0, 0) #reset exploit; 0x32F6 is USB_HOST, ATA_HDD, MS_1, ATA, USB, AVC, VME, SC, ME reset bit
     block = header + loader_code
     block_enc = kirk1_encrypt_cmac(block)
 
@@ -46,7 +46,6 @@ else:
     hash_padding = bytearray(12)
     hash_enc = kirk4(block_hash + hash_padding, 0x6C)
 
-    block_enc = kirk1_encrypt_cmac(block)
     padding = bytearray(0x1000 - len(block_enc) - 0x20) #pad with zeros to IPL block size minus the SHA1 hash at the end
     block_enc = block_enc + padding + hash_enc
 
