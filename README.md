@@ -38,7 +38,7 @@ Dark AleX and the rest of the M33 team for the original TimeMachine,
 Davee for the [Infinity](https://github.com/DaveeFTW/Infinity), [iplsdk](https://github.com/DaveeFTW/iplsdk), dumping the PSP 3000 bootrom and general help,  
 Proxima for the [MIPS emulator](https://github.com/ProximaV/allegrexemu) and general help,  
 Mathieulh for the original [PSP_IPL_SDK](https://github.com/mathieulh/PSP_IPL_SDK),  
-uOFW team for the firmware reverse-engineering efforts,
+uOFW team for the firmware reverse-engineering efforts,  
 John-K and artart78 for the IPL decryption code [pspdecrypt](https://github.com/John-K/pspdecrypt).
 
 # External libraries used
