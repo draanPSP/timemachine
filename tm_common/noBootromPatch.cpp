@@ -268,7 +268,7 @@ void noBootromPatch(void *entryPoint) {
 		//We replce it with our function that will provide a pre-calculated key
 		//IPL no longer needs bootrom data to decrypt stage2!
 		auto const patchPoint2 = const_cast<u32*>(sha256hmac_addr);
-		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(sha256hmacBufPatched));
+		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(sha256hmacPatched));
 	} else {
 		if constexpr (isDebug) {
 			printf("Type2\n");
@@ -292,7 +292,7 @@ void noBootromPatch(void *entryPoint) {
 		//First recent IPL patch
 		//We replce it with our function that will provide a pre-calculated key
 		auto const patchPoint2 = const_cast<u32*>(sha256hmac_addr);
-		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(sha256hmacBufPatched));
+		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(sha256hmacPatched));
 
 		//Second recent IPL patch -- not needed
 		//The "new" decryption function just scrambles the data a bit more before
