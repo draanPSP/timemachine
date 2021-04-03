@@ -93,24 +93,24 @@ namespace {
 	}
 }
 
-void scrambleBufPatched(u8 const *in1, u32 inSize1, u8 const *in2, u32 inSize2, u8 *out) {
+void sha256hmacPatched(u8 const *key, u32 keylen, u8 const *data, u32 datalen, u8 *out) {
 	if constexpr (isDebug) {
-		printf("0x%x 0x%x 0x%x\n", in1, in2, out);
+		printf("0x%x 0x%x 0x%x\n", key, data, out);
 	}
 
-	auto const bit32_1 = reinterpret_cast<u32 const*>(in1);
-	auto const bit32_2 = reinterpret_cast<u32 const*>(in2);
+	auto const bit32_key = reinterpret_cast<u32 const*>(key);
+	auto const bit32_data = reinterpret_cast<u32 const*>(data);
 
 	if constexpr (isDebug) {
-		printf("0x%x 0x%x\n", *bit32_1, *bit32_2);
+		printf("0x%x 0x%x\n", *bit32_key, *bit32_data);
 	}
 
-	auto const key_idx = *bit32_1;
+	auto const key_idx = *bit32_key;
 
 	for(u32 i = 0; i < HASH_ROWS; ++i) {
 		if (key_idx == g_KeyTable[i].idx) {
 			if constexpr (isDebug) {
-				printf("Found matching key 0x%x\n", g_KeyTable[i].idx);
+				printf("Found matching hmac 0x%x\n", g_KeyTable[i].idx);
 			}
 
 			memcpy(out, g_KeyTable[i].key, sizeof(KeyEntry::key));
@@ -257,18 +257,18 @@ void noBootromPatch(void *entryPoint) {
 		}
 
 		//Find the first call in this older decryption function
-		//It will be a call to scrambleBuf function
-		auto scramble_addr = _findJalForwards(decrypt_addr, 0x10000);
+		//It will be a call to sha256hmac function
+		auto sha256hmac_addr = _findJalForwards(decrypt_addr, 0x10000);
 
 		if constexpr (isDebug) {
-			printf("scramble: 0x%x\n", scramble_addr);
+			printf("sha256hmac: 0x%x\n", sha256hmac_addr);
 		}
 
 		//First recent IPL patch
 		//We replce it with our function that will provide a pre-calculated key
 		//IPL no longer needs bootrom data to decrypt stage2!
-		auto const patchPoint2 = const_cast<u32*>(scramble_addr);
-		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(scrambleBufPatched));
+		auto const patchPoint2 = const_cast<u32*>(sha256hmac_addr);
+		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(sha256hmacBufPatched));
 	} else {
 		if constexpr (isDebug) {
 			printf("Type2\n");
@@ -282,17 +282,17 @@ void noBootromPatch(void *entryPoint) {
 		}
 
 		//Find the first call in this older decryption function
-		//It will be a call to scrambleBuf function
-		auto scramble_addr = _findJalForwards(decrypt_addr, 0x10000);
+		//It will be a call to sha256hmacBuf function
+		auto sha256hmac_addr = _findJalForwards(decrypt_addr, 0x10000);
 
 		if constexpr (isDebug) {
-			printf("scramble: 0x%x\n", scramble_addr);
+			printf("sha256hmac: 0x%x\n", sha256hmac_addr);
 		}
 
 		//First recent IPL patch
 		//We replce it with our function that will provide a pre-calculated key
-		auto const patchPoint2 = const_cast<u32*>(scramble_addr);
-		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(scrambleBufPatched));
+		auto const patchPoint2 = const_cast<u32*>(sha256hmac_addr);
+		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(sha256hmacBufPatched));
 
 		//Second recent IPL patch -- not needed
 		//The "new" decryption function just scrambles the data a bit more before
