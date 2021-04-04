@@ -32,6 +32,10 @@ There is no install script (yet), so the build artifacts are all over the place.
 * `tm_sloader`, which can load `payload.bin` and `nandipl.bin` from the current directory
 * `tm_mloader`, which can load `payload_XXg.bin` and `nandipl_XXg.bin`, depending on your PSP model, from the current directory
 
+# Memory Stick IPL Installation
+
+To install the `tm_msipl.bin` to your Memory Stick you can use this Python 3 [script](https://github.com/draanPSP/msipl_installer).
+
 # Credits
 
 Dark AleX and the rest of the M33 team for the original TimeMachine,  
@@ -44,4 +48,3 @@ John-K and artart78 for the IPL decryption code [pspdecrypt](https://github.com/
 # External libraries used
 [Heatshrink](https://github.com/atomicobject/heatshrink) - ISC License  
 [FatFS](http://elm-chan.org/fsw/ff/00index_e.html) - BSD-style license
-
