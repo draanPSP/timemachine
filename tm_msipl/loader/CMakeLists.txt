@@ -10,7 +10,6 @@ add_executable(loader)
 
 target_sources(loader PRIVATE crt0.s main.cpp)
 target_link_libraries(loader PRIVATE loader::heatshrink iplsdk::preipl iplsdk::lowio iplsdk::cache)
-target_compile_definitions(loader PRIVATE RESET_EXPLOIT)
 target_compile_definitions(loader PRIVATE PAYLOAD_ENTRY_ADDR=${PAYLOAD_ENTRY_ADDR})
 
 set(LOAD_ADDR 0xBFC0001C)
