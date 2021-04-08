@@ -55,7 +55,7 @@
 // 	__builtin_unreachable();
 // }
 
-constexpr inline u32 BUFFER_START_ADDR = 0x4000000;
+constexpr inline u32 BUFFER_START_ADDR = 0x40E0000;
 constexpr inline u32 IPL_MAX_SIZE = 0x1000000;
 
 auto const g_PayloadLocation = reinterpret_cast<u8*>(BUFFER_START_ADDR);
