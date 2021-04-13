@@ -6,6 +6,12 @@ add_custom_target(bin2cpp ALL
 
 set_property(TARGET bin2cpp PROPERTY EXEC ${CMAKE_CURRENT_SOURCE_DIR}/bin2cpp/bin2cpp.py)
 
+add_custom_target(psppack ALL
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/psppack/psppack.py
+)
+
+set_property(TARGET psppack PROPERTY EXEC ${CMAKE_CURRENT_SOURCE_DIR}/psppack/psppack.py)
+
 add_custom_target(make_ms_ipl ALL
 	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/psptools/make_ms_ipl.py
 )
