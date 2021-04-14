@@ -10,8 +10,10 @@
 
 #include "main.h"
 
-#include "rebootex_01g.h" // 0x229C
-#include "rebootex_02g.h" // 0x3700
+#include <rebootex.h>
+
+// #include "rebootex_01g.h" // 0x229C
+// #include "rebootex_02g.h" // 0x3700
 
 PSP_MODULE_INFO("TimeMachine_Control", 0x1007, 1, 0);
 PSP_MAIN_THREAD_ATTR(0);
@@ -979,8 +981,17 @@ int sceKernelExtendKernelStackPatched3(int type, void (* cb)(void *), void *arg)
 //0x00000000
 int sceKernelGzipDecompressPatched(u8 *dest, int destSize, u8 *src, u32 unknown)
 {
-	if(sceKernelGetModel() == 0) src = rebootex_01g;
-	else src = rebootex_02g;
+	switch(sceKernelGetModel()) {
+		case 0:
+			src = rebootex_01g;
+			break;
+		case 1:
+			src = rebootex_02g;
+			break;
+		default:
+			src = rebootex_03g;
+			break;
+	}
 
 	return sceKernelGzipDecompress(dest, destSize, src, 0);
 }

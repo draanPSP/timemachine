@@ -10,6 +10,7 @@ add_compile_options(-Os -fno-exceptions $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 
 add_subdirectory(iplsdk)
 add_subdirectory(m33sdk)
+add_subdirectory(utils)
 add_subdirectory(tools)
 
 add_subdirectory(tm_common)
