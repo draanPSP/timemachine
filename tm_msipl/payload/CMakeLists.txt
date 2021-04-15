@@ -1,6 +1,6 @@
 add_library(payload_common STATIC)
 
-target_sources(payload_common PRIVATE main.cpp)
+target_sources(payload_common PRIVATE main.cpp config.cpp)
 
 target_link_libraries(payload_common PRIVATE tm_common::common iplsdk::crt iplsdk::ff_ro iplsdk::lowio iplsdk::cache iplsdk::ctrl iplsdk::ms iplsdk::syscon iplsdk::serial)
 
