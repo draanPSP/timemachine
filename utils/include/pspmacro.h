@@ -21,7 +21,7 @@
 
 #define MAKE_FUNCTION_RETURN(a, v)                                                                 \
     _sw(0x03E00008, a);                                                                            \
-    _sw(LI(GPREG_V0, 1), a + 4)
+    _sw(LI(GPREG_V0, v), a + 4)
 
 #define EXTRACT_J_ADDR(x) (((((u32)_lw((u32)x)) & ~0xFC000000) << 2) | 0x80000000)
 
