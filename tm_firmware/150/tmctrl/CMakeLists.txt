@@ -1,3 +1,5 @@
+add_subdirectory(rebootex)
+
 add_executable(tmctrl150)
 build_prx(tmctrl150 EXPORTS exports.exp)
 
@@ -6,9 +8,10 @@ target_compile_options(tmctrl150 PRIVATE -fshort-wchar -Wno-address-of-packed-me
 target_link_libraries(tmctrl150 PRIVATE pspdisplay_driver_weak pspreg_driver_weak pspsdk pspkernel)
 
 add_custom_command(OUTPUT rebootex.h
+    DEPENDS tmctrl::rebootex150_01g
     COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
         --gzip --c_style
-        rebootex_01g=${CMAKE_CURRENT_SOURCE_DIR}/rebootex/rebootex150_01g.bin
+        rebootex_01g="$<TARGET_FILE:rebootex150_01g>".bin
         rebootex.h
 )
 
