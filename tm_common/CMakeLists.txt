@@ -1,3 +1,5 @@
+add_subdirectory(crt)
+
 add_library(common INTERFACE)
 add_library(tm_common::common ALIAS common)
 
