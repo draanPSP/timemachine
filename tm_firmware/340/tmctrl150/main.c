@@ -7,32 +7,13 @@
 #include <pspsysevent.h>
 #include <psputilsforkernel.h>
 
+#include <pspmacro.h>
+
 #include "main.h"
 #include "flashemu.h"
 #include <rebootex.h>
 
 PSP_MODULE_INFO("TimeMachine_Control", PSP_MODULE_KERNEL | PSP_MODULE_SINGLE_START | PSP_MODULE_SINGLE_LOAD | PSP_MODULE_NO_STOP, 1, 0);
-
-#define JAL_OPCODE 0x0C000000
-#define J_OPCODE 0x08000000
-#define SC_OPCODE 0x0000000C
-#define JR_RA 0x03e00008
-
-#define NOP 0x00000000
-
-#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f)&0x3FFFFFFF) >> 2), a);
-#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f)&0x3FFFFFFF) >> 2), a);
-#define MAKE_SYSCALL(a, n) _sw(SC_OPCODE | (n << 6), a);
-#define JUMP_TARGET(x) ((x & 0x3FFFFFFF) << 2)
-#define REDIRECT_FUNCTION(a, f)                        \
-	_sw(J_OPCODE | (((u32)(f) >> 2) & 0x03ffffff), a); \
-	_sw(NOP, a + 4);
-#define MAKE_DUMMY_FUNCTION0(a) \
-	_sw(0x03e00008, a);         \
-	_sw(0x00001021, a + 4);
-#define MAKE_DUMMY_FUNCTION1(a) \
-	_sw(0x03e00008, a);         \
-	_sw(0x24020001, a + 4);
 
 int sceDisplaySetBrightnessPatched(int level, int unk1);
 int SysEventHandler(int eventId, char *eventName, void *param, int *result);
@@ -213,13 +194,13 @@ int sceDisplaySetBrightnessPatched(int level, int unk1)
 
 int RebootBinDecompressPatched(u8 *dest, int destSize, u8 *src, int unk)
 {
-	// Copy oe 150 rebootex.bin to 0x88FC0000
-	memcpy(0x88fc0000, oerebootex + 0x10, 0xa38);
+	// Copy oe rebootex.bin to 0x88FC0000
+	memcpy((void *)0x88fc0000, oerebootex + 0x10, 0xa38);
 
-	sceKernelGzipDecompress(0x88fd0000, 0x10000, rebootex_01g, 0);
+	sceKernelGzipDecompress((u8 *)0x88fd0000, 0x10000, rebootex_01g, 0);
 
 	if (*isReboot)
-		return sceKernelDeflateDecompress(0x88600000, destSize, rebootbin340 + 0x10, unk);
+		return sceKernelDeflateDecompress((u8 *)0x88600000, destSize, rebootbin340 + 0x10, unk);
 
 	return sceKernelGzipDecompress(dest, destSize, src, unk);
 }
@@ -256,9 +237,9 @@ int OnModuleStart(SceModule2 *mod)
 
 		REDIRECT_FUNCTION(text_addr + 0x1c, RebootBinDecompressPatched);
 
-		rebootbin340 = text_addr + 0x830;
-		oerebootex = text_addr + 0xb908;
-		isReboot = text_addr + 0xc350;
+		rebootbin340 = (u8 *)(text_addr + 0x830);
+		oerebootex = (u8 *)(text_addr + 0xb908);
+		isReboot = (int *)(text_addr + 0xc350);
 
 		ClearCaches();
 	}
@@ -267,7 +248,7 @@ int OnModuleStart(SceModule2 *mod)
 		u32 funcAddr = GetModuleExportFuncAddr("sceLflashFatfmt", "LflashFatfmt", 0xB7A424A4); //sceLflashFatfmtStartFatfmt
 		if (funcAddr)
 		{
-			MAKE_DUMMY_FUNCTION0(funcAddr);
+			MAKE_FUNCTION_RETURN0(funcAddr);
 			ClearCaches();
 		}
 	}
