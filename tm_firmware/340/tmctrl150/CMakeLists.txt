@@ -1,5 +1,3 @@
-add_subdirectory(rebootex)
-
 add_executable(tmctrl340_150)
 build_prx(tmctrl340_150 EXPORTS exports.exp)
 
@@ -8,10 +6,10 @@ target_compile_options(tmctrl340_150 PRIVATE -fshort-wchar -Wno-address-of-packe
 target_link_libraries(tmctrl340_150 PRIVATE utils pspdisplay_driver_weak pspreg_driver_weak pspsdk pspkernel_sceIdStorage_weak)
 
 add_custom_command(OUTPUT rebootex.h
-    DEPENDS tmctrl::rebootex340_150_01g
+    DEPENDS tmctrl::rebootex340_01g
     COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
         --gzip --c_style
-        rebootex_01g="$<TARGET_FILE:rebootex340_150_01g>".bin
+        rebootex_01g="$<TARGET_FILE:rebootex340_01g>".bin
         rebootex.h
 )
 
