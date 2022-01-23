@@ -131,7 +131,7 @@ int UninstallFlashEmu()
 
 static void BuildPath(const char *file)
 {
-	strncpy(path, "ms0:/TM/340OE", 12);
+	strncpy(path, "ms0:/TM/340OE", 14);
 	strncat(path, file, 256);
 }
 
