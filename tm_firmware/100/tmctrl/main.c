@@ -291,9 +291,8 @@ int OnModuleStart(SceModule *mod)
 	}
 	else if (strcmp(moduleName, "scePower_Service") == 0)
 	{
-		//TODO - Update for 100
-		//_sw(0x00e02021, text_addr+0x558); //ADDU $a0 $a3 $zero
-		//ClearCaches();
+		_sw(0x00e02021, text_addr+0x3bc); //ADDU $a0 $a3 $zero
+		ClearCaches();
 	}
 	else if (strcmp(moduleName, "sceDisplay_Service") == 0)
 	{
