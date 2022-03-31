@@ -75,7 +75,7 @@ u32 GetModuleExportFuncAddr(char *moduleName, char *libraryName, int nid)
 	return 0;
 }
 
-STMOD_HANDLER SetModuleStartUpHandler(STMOD_HANDLER handler)
+STMOD_HANDLER sctrlHENSetStartModuleHandler(STMOD_HANDLER handler)
 {
 	unsigned int k1 = pspSdkSetK1(0);
 
@@ -225,7 +225,7 @@ int module_start(SceSize args, void *argp)
 {
 	PatchSceModuleManager();
 	PatchSceLoadExec();
-	SetModuleStartUpHandler(OnModuleStart);
+	sctrlHENSetStartModuleHandler(OnModuleStart);
 	InstallFlashEmu();
 	ClearCaches();
 
