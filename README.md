@@ -41,7 +41,7 @@ To install the `tm_msipl.bin` to your Memory Stick you can use this Python 3 [sc
 Dark AleX and the rest of the M33 team for the original TimeMachine,  
 Davee for the [Infinity](https://github.com/DaveeFTW/Infinity), [iplsdk](https://github.com/DaveeFTW/iplsdk), dumping the PSP 3000 bootrom and general help,  
 Proxima for the [MIPS emulator](https://github.com/ProximaV/allegrexemu) and general help,  
-Mathieulh for the original [PSP_IPL_SDK](https://github.com/mathieulh/PSP_IPL_SDK),  
+Mathieulh for the original [PSP_IPL_SDK](https://github.com/mathieulh/PSP_IPL_SDK) and [Devhook](https://github.com/mathieulh/Devhook),  
 uOFW team for the firmware reverse-engineering efforts,  
 John-K and artart78 for the IPL decryption code [pspdecrypt](https://github.com/John-K/pspdecrypt).
 

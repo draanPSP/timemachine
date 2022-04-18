@@ -25,6 +25,17 @@
 
 #define EXTRACT_J_ADDR(x) (((((u32)_lw((u32)x)) & ~0xFC000000) << 2) | 0x80000000)
 
+#ifdef __cplusplus
+#define KERNEL_HIJACK_FUNCTION(a, f, ptr, cast)                                                    \
+    {                                                                                              \
+        static u32 patch_buffer[3];                                                                \
+        _sw(_lw(a + 0x00), (u32)patch_buffer + 0x00);                                              \
+        _sw(_lw(a + 0x04), (u32)patch_buffer + 0x08);                                              \
+        MAKE_JUMP((u32)patch_buffer + 0x04, a + 0x08);                                             \
+        REDIRECT_FUNCTION(a, f);                                                                   \
+        ptr = cast patch_buffer;                                                                   \
+    }
+#else
 #define KERNEL_HIJACK_FUNCTION(a, f, ptr)                                                          \
     {                                                                                              \
         static u32 patch_buffer[3];                                                                \
@@ -34,6 +45,7 @@
         REDIRECT_FUNCTION(a, f);                                                                   \
         ptr = (void*)patch_buffer;                                                                 \
     }
+#endif
 
 #define MIPS_ITYPE(op, rs, rt, imm)                                                                \
     (((op & 0x3F) << 26) | ((rs & 0x1F) << 21) | ((rt & 0x1F) << 16) | (imm & 0xFFFF))
