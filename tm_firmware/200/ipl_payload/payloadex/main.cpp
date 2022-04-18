@@ -120,7 +120,7 @@ int main(s32 const a0, s32 const a1, s32 const a2, s32 const a3) {
 	_sw(0x3C040000, 0x88400454);
 
 	// disable setting of sign checked module attr flag on load core module info
-	_sw(0, 0x88400a44);
+	_sw(0, 0x88400a48);
 
 	/* File open redirection */
 
