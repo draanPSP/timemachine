@@ -14,7 +14,9 @@ target_sources(timemachine
     main.cpp
     tm_sloader.h
     150_tmctrl150.h
-    150_payload.h)
+    150_payload.h
+    200_tmctrl200.h
+    200_payload.h)
 
 target_link_libraries(timemachine PRIVATE z crypto stdc++fs)
 target_include_directories(timemachine PRIVATE pspdecrypt ${CMAKE_CURRENT_BINARY_DIR})
@@ -38,4 +40,18 @@ add_custom_command(OUTPUT 150_tmctrl150.h
         --c_style
         tm150_tmctrl150="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/150/tmctrl/tmctrl150.prx
         150_tmctrl150.h
+)
+
+add_custom_command(OUTPUT 200_payload.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm200_payload="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/200/ipl_payload/payload_01g.bin
+        200_payload.h
+)
+
+add_custom_command(OUTPUT 200_tmctrl200.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm200_tmctrl200="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/200/tmctrl/tmctrl200.prx
+        200_tmctrl200.h
 )
