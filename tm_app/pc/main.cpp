@@ -18,6 +18,8 @@
 #include "150_tmctrl150.h"
 #include "200_payload.h"
 #include "200_tmctrl200.h"
+#include "250_payload.h"
+#include "250_tmctrl250.h"
 
 using namespace std;
 
@@ -159,6 +161,33 @@ int main(int argc, char *argv[]) {
             WriteFile((outDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
             WriteFile((outDir + "/payload.bin").c_str(), (void*)tm200_payload, sizeof(tm200_payload));
             WriteFile((outDir + "/tmctrl200.prx").c_str(), (void*)tm200_tmctrl200, sizeof(tm200_tmctrl200));
+
+            std::filesystem::remove_all(outDir + "/PSARDUMPER");
+
+            // tidy up
+            delete[] inData;
+            delete[] outData;
+        }
+        else
+            return 1;
+    }
+    else if (version.compare("2.50") == 0) {
+        std::string logStr;
+        string outDir = tmDir + "/250";
+        size = readUpdatePbp(upDir + "/250.pbp", &inData, &outData);
+        if (size > 0) {
+            cout << "Setting up firmware 250 in " << outDir << endl;
+            u32 pspOff = *(u32*)&inData[0x20];
+            u32 psarOff = *(u32*)&inData[0x24];
+
+            cout << "Extracting firmware files from update PBP" << endl;
+            pspDecryptPSAR((u8*)&inData[psarOff], size - psarOff, outDir, true, nullptr, 0, verbose, false, false);
+
+            std::filesystem::copy(outDir + "/PSARDUMPER/stage1_psp_ipl.bin", outDir + "/nandipl.bin", std::filesystem::copy_options::overwrite_existing);
+
+            WriteFile((outDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
+            WriteFile((outDir + "/payload.bin").c_str(), (void*)tm250_payload, sizeof(tm250_payload));
+            WriteFile((outDir + "/tmctrl250.prx").c_str(), (void*)tm250_tmctrl250, sizeof(tm250_tmctrl250));
 
             std::filesystem::remove_all(outDir + "/PSARDUMPER");
 
