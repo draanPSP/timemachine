@@ -18,7 +18,14 @@ target_sources(timemachine
     200_tmctrl200.h
     200_payload.h
     250_tmctrl250.h
-    250_payload.h)
+    250_payload.h
+    271_tmctrl150.h
+    271_tmctrl271.h
+    271_payload.h
+    271_systemctrl150
+    271_systemctrl
+    271_paf.h
+    271_vshmain.h)
 
 target_link_libraries(timemachine PRIVATE z crypto stdc++fs)
 target_include_directories(timemachine PRIVATE pspdecrypt ${CMAKE_CURRENT_BINARY_DIR})
@@ -70,4 +77,53 @@ add_custom_command(OUTPUT 250_tmctrl250.h
         --c_style
         tm250_tmctrl250="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/250/tmctrl/tmctrl250.prx
         250_tmctrl250.h
+)
+
+add_custom_command(OUTPUT 271_payload.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm271_payload="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/271/ipl_payload/payload_01g.bin
+        271_payload.h
+)
+
+add_custom_command(OUTPUT 271_tmctrl150.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm271_tmctrl150="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/271/tmctrl150/tmctrl150.prx
+        271_tmctrl150.h
+)
+
+add_custom_command(OUTPUT 271_tmctrl271.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm271_tmctrl271="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/271/tmctrl271/tmctrl271.prx
+        271_tmctrl271.h
+)
+
+add_custom_command(OUTPUT 271_systemctrl150.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm271_systemctrl150="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/271SEC/systemctrl150.prx
+        271_systemctrl150.h
+)
+
+add_custom_command(OUTPUT 271_systemctrl.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm271_systemctrl="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/271SEC/systemctrl.prx
+        271_systemctrl.h
+)
+
+add_custom_command(OUTPUT 271_paf.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm271_paf="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/271SEC/paf.prx
+        271_paf.h
+)
+
+add_custom_command(OUTPUT 271_vshmain.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm271_vshmain="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/271SEC/vshmain.prx
+        271_vshmain.h
 )

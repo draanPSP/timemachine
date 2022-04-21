@@ -617,8 +617,9 @@ int pspDecryptPSAR(u8 *dataPSAR, u32 size, std::string outdir, bool extractOnly,
         {
             logStr += "expanded";
 
+            bool isPSP = memcmp(data2, "~PSP", 4) == 0;
             // If we don't decrypt modules, or for non-encrypted modules
-            if (extractOnly || (memcmp(data2, "~PSP", 4) != 0))
+            if (extractOnly || !isPSP)
             {
                 // Check if the IPL file is not a kirk1 (or kirk1 with additional keys for 03g+), which means it needs predecryption
                 if (strncmp(name, "ipl:", 4) == 0
@@ -645,14 +646,14 @@ int pspDecryptPSAR(u8 *dataPSAR, u32 size, std::string outdir, bool extractOnly,
                 }
 
                 logStr += ",saved!";
-                if (CheckExtractReboot(name, data2, cbExpanded, data1, data2, outdir, extractOnly, logStr) < 0) {
+                if (!isPSP && CheckExtractReboot(name, data2, cbExpanded, data1, data2, outdir, false, logStr) < 0) {
                     logStr += ",error extracting/decrypting reboot.bin";
                 }
             }
 
             // For encrypted ~PSP modules, or ME images, if decrypting is not disabled
-            if ((memcmp(data2, "~PSP", 4) == 0 || strncmp(name, "flash0:/kd/resource/me", strlen("flash0:/kd/resource/me")) == 0) &&
-                !extractOnly)
+            if ((isPSP || strncmp(name, "flash0:/kd/resource/me", strlen("flash0:/kd/resource/me")) == 0) &&
+                (!extractOnly || strncmp(name, "flash0:/kd/loadexec.prx", strlen("flash0:/kd/loadexec.prx")) == 0))
             {
                 int cbDecrypted = pspDecryptPRX(data2, data1, cbExpanded);
 
@@ -685,17 +686,19 @@ int pspDecryptPSAR(u8 *dataPSAR, u32 size, std::string outdir, bool extractOnly,
                         }
                     }
 
-                    if (WriteFile(szDataPath.c_str(), pbToSave, cbToSave) != cbToSave)
+                    if (!extractOnly)
                     {
-                        printf("Error writing %s.\n", szDataPath.c_str());
+                        if (WriteFile(szDataPath.c_str(), pbToSave, cbToSave) != cbToSave)
+                            printf("Error writing %s.\n", szDataPath.c_str());
+                        else
+                            logStr += ",saved!";
                     }
-
-                    logStr += ",saved!";
-                    if (CheckExtractReboot(name, pbToSave, cbToSave, data1, data2, outdir, extractOnly, logStr) < 0) {
+                    
+                    if (CheckExtractReboot(name, pbToSave, cbToSave, data1, data2, outdir, false, logStr) < 0) {
                         logStr += ",error extracting/decrypting reboot.bin";
                     }
 
-                    if (cbRemain > 0) {
+                    if (!extractOnly && cbRemain > 0) {
                         u8 *endPtr2;
                         logStr += "Has part2";
                         int cbExp = pspDecompress(endPtr, cbRemain, data2, 3000000, logStr, &endPtr2);

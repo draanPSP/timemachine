@@ -45,3 +45,35 @@ s32 gunzip(u8 *inBuf, u32 inSize, u8 *outBuf, u32 outSize, u32 *realInSize, bool
     return infstream.total_out;
 }
 
+int deflateCompress(void *inbuf, int insize, void *outbuf, int outsize, int level, bool gzip)
+{
+	int res;
+    z_stream z;
+
+	z.zalloc = Z_NULL;
+	z.zfree  = Z_NULL;
+	z.opaque = Z_NULL;
+
+    int windowBits = -15;
+
+    if (gzip)
+        windowBits = 15 | 16;
+
+	if (deflateInit2(&z, level , Z_DEFLATED, windowBits, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+		return -1;
+
+	z.next_out  = (Bytef *)outbuf;
+	z.avail_out = outsize;
+	z.next_in   = (Bytef *)inbuf;
+	z.avail_in  = insize;
+
+	if (deflate(&z, Z_FINISH) != Z_STREAM_END)
+		return -1;
+
+	res = outsize - z.avail_out;
+
+	if (deflateEnd(&z) != Z_OK)
+		return -1;
+
+	return res;
+}
