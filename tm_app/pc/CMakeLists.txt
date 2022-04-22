@@ -29,7 +29,21 @@ target_sources(timemachine
     271_systemctrl150
     271_systemctrl
     271_paf.h
-    271_vshmain.h)
+    271_vshmain.h
+    340_tmctrl150.h
+    340_tmctrl340.h
+    340_payload.h
+    340_systemctrl150
+    340_systemctrl
+    340_idcanager.h
+    340_lcpatcher.h
+    340_popcorn.h
+    340_reboot150.h
+    340_recovery.h
+    340_systemctrl.h
+    340_systemctrl150.h
+    340_vshctrl.h
+    )
 
 target_link_libraries(timemachine PRIVATE z crypto stdc++fs)
 target_include_directories(timemachine PRIVATE pspdecrypt ${CMAKE_CURRENT_BINARY_DIR})
@@ -158,4 +172,81 @@ add_custom_command(OUTPUT 271_vshmain.h
         --c_style
         tm271_vshmain="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/271SEC/vshmain.prx
         271_vshmain.h
+)
+
+add_custom_command(OUTPUT 340_payload.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_payload="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/340/ipl_payload/payload_01g.bin
+        340_payload.h
+)
+
+add_custom_command(OUTPUT 340_tmctrl150.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_tmctrl150="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/340/tmctrl150/tmctrl150.prx
+        340_tmctrl150.h
+)
+
+add_custom_command(OUTPUT 340_tmctrl340.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_tmctrl340="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/340/tmctrl340/tmctrl340.prx
+        340_tmctrl340.h
+)
+
+add_custom_command(OUTPUT 340_idcanager.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_idcanager="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/340OE/idcanager.prx
+        340_idcanager.h
+)
+
+add_custom_command(OUTPUT 340_lcpatcher.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_lcpatcher="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/340OE/lcpatcher.prx
+        340_lcpatcher.h
+)
+
+add_custom_command(OUTPUT 340_popcorn.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_popcorn="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/340OE/popcorn.prx
+        340_popcorn.h
+)
+
+add_custom_command(OUTPUT 340_reboot150.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_reboot150="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/340OE/reboot150.prx
+        340_reboot150.h
+)
+
+add_custom_command(OUTPUT 340_recovery.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_recovery="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/340OE/recovery.prx
+        340_recovery.h
+)
+
+add_custom_command(OUTPUT 340_systemctrl.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_systemctrl="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/340OE/systemctrl.prx
+        340_systemctrl.h
+)
+
+add_custom_command(OUTPUT 340_systemctrl150.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_systemctrl150="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/340OE/systemctrl150.prx
+        340_systemctrl150.h
+)
+
+add_custom_command(OUTPUT 340_vshctrl.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm340_vshctrl="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/340OE/vshctrl.prx
+        340_vshctrl.h
 )
