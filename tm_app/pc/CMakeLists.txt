@@ -17,6 +17,7 @@ target_sources(timemachine
     100_payload.h
     100B_tmctrl100B.h
     100B_payload.h
+    100B_vshex.h
     150_tmctrl150.h
     150_payload.h
     200_tmctrl200.h
@@ -74,6 +75,13 @@ add_custom_command(OUTPUT 100B_payload.h
         --c_style
         tm100B_payload="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/100_Bogus/ipl_payload/payload_01g.bin
         100B_payload.h
+)
+
+add_custom_command(OUTPUT 100B_vshex.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm100B_vshex="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/100_Bogus/vshex/vshex.prx
+        100B_vshex.h
 )
 
 add_custom_command(OUTPUT 100B_tmctrl100B.h

@@ -19,6 +19,7 @@
 #include "100_tmctrl100.h"
 #include "100B_payload.h"
 #include "100B_tmctrl100B.h"
+#include "100B_vshex.h"
 #include "150_payload.h"
 #include "150_tmctrl150.h"
 #include "200_payload.h"
@@ -59,6 +60,7 @@ void help(const char* exeName) {
     cout << "  -u, --updir=DIR         path to updater pbps" << endl;
     cout << "  -V, --version=VER       TM firmware version. Supported versions are: 1.00, 1.00Bogus, 1.50, 2.00, 2.50, 2.71SE-C, 3.40OE-A" << endl;
     cout << "  -d, --downdaterdir=DIR  path to 1.00 downdater dump. Required for 1.00 and 1.00Bogus firmware installs" << endl;
+    cout << "  -b, --bogusfix          install module to fix corrupt eboots in 1.00 Bogus firmware" << endl;
 }
 
 int readFile(string path, char **inData) {
@@ -215,7 +217,8 @@ int main(int argc, char *argv[]) {
         {"updir",        required_argument, 0, 'u'},
         {"version",      required_argument, 0, 'V'},
         {"downdaterdir", required_argument, 0, 'd'},
-        {0,              0,                 0,  0 }
+        {"bogusfix",     no_argument,       0, 'b'},
+        {0,              0,                 0,  0  }
     };
     int long_index;
 
@@ -224,9 +227,10 @@ int main(int argc, char *argv[]) {
     bool verbose = false;
     string version;
     string downdaterDir;
+    bool installBogusFix = false;
     int c = 0;
     cout << showbase << internal << setfill('0');
-    while ((c = getopt_long(argc, argv, "hvo:t:u:V:d:", long_options, &long_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvo:t:u:V:d:b", long_options, &long_index)) != -1) {
         switch (c) {
             case 'h':
                 help(argv[0]);
@@ -246,6 +250,9 @@ int main(int argc, char *argv[]) {
             case 'd':
                 downdaterDir = string(optarg);
                 break;
+            case 'b':
+                installBogusFix = true;
+                break;
             default:
                 help(argv[0]);
                 return 1;
@@ -261,7 +268,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    if ((version.compare("1.00Bogus") == 0) || (version.compare("1.00Bogus") == 0))
+    if ((version.compare("1.00") == 0) || (version.compare("1.00Bogus") == 0))
     {
         if (downdaterDir.empty()) {
             cerr << "Downdater required for 1.00 firmware installs" << endl;
@@ -277,7 +284,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-
+    
     if (version.compare("1.00") == 0) {
         string installDir = tmDir + "/100";
         
@@ -293,7 +300,7 @@ int main(int argc, char *argv[]) {
         WriteFile((installDir + "/payload.bin").c_str(), (void*)tm100_payload, sizeof(tm100_payload));
         WriteFile((installDir + "/tmctrl100.prx").c_str(), (void*)tm100_tmctrl100, sizeof(tm100_tmctrl100));
     }
-    if (version.compare("1.00Bogus") == 0) {
+    else if (version.compare("1.00Bogus") == 0) {
         string installDir = tmDir + "/100_Bogus";
         extractFirmware(installDir, upDir, "100", true, false, verbose);
 
@@ -302,6 +309,12 @@ int main(int argc, char *argv[]) {
         WriteFile((installDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
         WriteFile((installDir + "/payload.bin").c_str(), (void*)tm100B_payload, sizeof(tm100B_payload));
         WriteFile((installDir + "/tmctrl100_Bogus.prx").c_str(), (void*)tm100B_tmctrl100B, sizeof(tm100B_tmctrl100B));
+
+        if (installBogusFix) {
+            cout << "Installing corrupt eboot fix" << endl;
+            updateBtCfg(installDir + "/kd/pspbtcnf.txt", { { "%/vsh/module/common_util.prx", "%/vsh/module/common_util.prx\n%/kd/vshex.prx" } });
+            WriteFile((installDir + "/kd/vshex.prx").c_str(), (void*)tm100B_vshex, sizeof(tm100B_vshex));
+        }
     }
     else if (version.compare("1.50") == 0) {
         string installDir = tmDir + "/150";

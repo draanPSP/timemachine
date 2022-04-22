@@ -10,4 +10,5 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-pic")
 add_custom_command(TARGET vshex_100_Bogus
     POST_BUILD
     COMMAND psp-fixup-imports vshex_100_Bogus.prx
+    COMMAND cp vshex_100_Bogus.prx vshex.prx
 )
