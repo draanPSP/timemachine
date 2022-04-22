@@ -64,7 +64,7 @@ int readFile(string path, char **inData) {
     return size;
 }
 
-void extract150Ipl(u8 *dataPsp, u32 size, string outDir, bool verbose) {
+void extract150Ipl(u8 *dataPsp, u32 size, string installDir, bool verbose) {
     
     string logStr;
     char *outData = new char[0x400000];
@@ -76,7 +76,7 @@ void extract150Ipl(u8 *dataPsp, u32 size, string outDir, bool verbose) {
     // extract ipl from ipl updater module
     cout << "Extracting ipl" << endl;
     outSize = pspDecryptPRX((const u8 *)&outData[0x303100], (u8 *)updaterData, 0x38480, nullptr, true);
-    decryptIPL((u8*)&updaterData[0x980], 0x37000, 150, "psp_ipl.bin", outDir + "/PSARDUMPER", nullptr, 0, verbose, false, logStr);
+    decryptIPL((u8*)&updaterData[0x980], 0x37000, 150, "psp_ipl.bin", installDir + "/PSARDUMPER", nullptr, 0, verbose, false, logStr);
     std::cout << logStr << std::endl;
 
     delete[] outData;
@@ -126,6 +126,42 @@ void createSystemCtrl(string systemCtrlPath, string rebootBinPath, const unsigne
     delete[] rebootBuf;
     delete[] outBuf;
     delete[] compressedBuf;
+}
+
+void extractFirmware(string installPath, string upDir, string version, bool deletePsarDumper, bool verbose)
+{
+    char *buf;
+    string installerPath = upDir + "/" + version + ".PBP";
+
+    int size = readFile(installerPath, &buf);
+    if (size > 0) {
+        cout << "Setting up firmware " << version <<" in " << installPath << endl;
+        u32 pspOff = *(u32*)&buf[0x20];
+        u32 psarOff = *(u32*)&buf[0x24];
+
+        cout << "Extracting firmware files from update PBP" << endl;
+        pspDecryptPSAR((u8*)&buf[psarOff], size - psarOff, installPath, true, nullptr, 0, verbose, false, false);
+
+        if (version.compare("150") == 0) {
+            extract150Ipl((u8*)&buf[pspOff], psarOff - pspOff, installPath, verbose);
+            std::filesystem::copy(installPath + "/PSARDUMPER/stage1_psp_ipl.bin", installPath + "/nandipl.bin", std::filesystem::copy_options::overwrite_existing);
+        }
+
+        if (std::filesystem::exists(installPath + "/PSARDUMPER/stage1_psp_ipl.bin"))
+            std::filesystem::copy(installPath + "/PSARDUMPER/stage1_psp_ipl.bin", installPath + "/nandipl.bin", std::filesystem::copy_options::overwrite_existing);
+
+        if (deletePsarDumper)
+            std::filesystem::remove_all(installPath + "/PSARDUMPER");
+
+        // tidy up
+        delete[] buf;
+    }
+    else
+    {
+        std::cerr << "Error reading " << installerPath << std::endl;
+        exit(1);
+    }
+        
 }
 
 int main(int argc, char *argv[]) {
@@ -179,169 +215,86 @@ int main(int argc, char *argv[]) {
     }
 
     if (version.compare("1.50") == 0) {
-        std::string logStr;
-        string outDir = tmDir + "/150";
-        size = readFile(upDir + "/150.pbp", &inData);
-        if (size > 0) {
-            cout << "Setting up firmware 150 in " << outDir << endl;
-            u32 pspOff = *(u32*)&inData[0x20];
-            u32 psarOff = *(u32*)&inData[0x24];
+        string installDir = tmDir + "/150";
+        extractFirmware(installDir, upDir, "150", true, verbose);
 
-            cout << "Extracting firmware files from update PBP" << endl;
-            pspDecryptPSAR((u8*)&inData[psarOff], size - psarOff, outDir, true, nullptr, 0, verbose, false, false);
-
-            extract150Ipl((u8*)&inData[pspOff], psarOff - pspOff, outDir, verbose);
-            std::filesystem::copy(outDir + "/PSARDUMPER/stage1_psp_ipl.bin", outDir + "/nandipl.bin", std::filesystem::copy_options::overwrite_existing);
-
-            WriteFile((outDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
-            WriteFile((outDir + "/payload.bin").c_str(), (void*)tm150_payload, sizeof(tm150_payload));
-            WriteFile((outDir + "/tmctrl150.prx").c_str(), (void*)tm150_tmctrl150, sizeof(tm150_tmctrl150));
-
-            std::filesystem::remove_all(outDir + "/PSARDUMPER");
-
-            // tidy up
-            delete[] inData;
-        }
-        else
-            return 1;
+        WriteFile((installDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
+        WriteFile((installDir + "/payload.bin").c_str(), (void*)tm150_payload, sizeof(tm150_payload));
+        WriteFile((installDir + "/tmctrl150.prx").c_str(), (void*)tm150_tmctrl150, sizeof(tm150_tmctrl150));
     }
     else if (version.compare("2.00") == 0) {
-        std::string logStr;
-        string outDir = tmDir + "/200";
-        size = readFile(upDir + "/200.pbp", &inData);
-        if (size > 0) {
-            cout << "Setting up firmware 200 in " << outDir << endl;
-            u32 pspOff = *(u32*)&inData[0x20];
-            u32 psarOff = *(u32*)&inData[0x24];
-
-            cout << "Extracting firmware files from update PBP" << endl;
-            pspDecryptPSAR((u8*)&inData[psarOff], size - psarOff, outDir, true, nullptr, 0, verbose, false, false);
-
-            std::filesystem::copy(outDir + "/PSARDUMPER/stage1_psp_ipl.bin", outDir + "/nandipl.bin", std::filesystem::copy_options::overwrite_existing);
-
-            WriteFile((outDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
-            WriteFile((outDir + "/payload.bin").c_str(), (void*)tm200_payload, sizeof(tm200_payload));
-            WriteFile((outDir + "/tmctrl200.prx").c_str(), (void*)tm200_tmctrl200, sizeof(tm200_tmctrl200));
-
-            std::filesystem::remove_all(outDir + "/PSARDUMPER");
-
-            // tidy up
-            delete[] inData;
-        }
-        else
-            return 1;
+        string installDir = tmDir + "/200";
+        extractFirmware(installDir, upDir, "200", true, verbose);
+        
+        WriteFile((installDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
+        WriteFile((installDir + "/payload.bin").c_str(), (void*)tm200_payload, sizeof(tm200_payload));
+        WriteFile((installDir + "/tmctrl200.prx").c_str(), (void*)tm200_tmctrl200, sizeof(tm200_tmctrl200));
     }
     else if (version.compare("2.50") == 0) {
-        std::string logStr;
-        string outDir = tmDir + "/250";
-        size = readFile(upDir + "/250.pbp", &inData);
-        if (size > 0) {
-            cout << "Setting up firmware 250 in " << outDir << endl;
-            u32 pspOff = *(u32*)&inData[0x20];
-            u32 psarOff = *(u32*)&inData[0x24];
+        string installDir = tmDir + "/250";
+        extractFirmware(installDir, upDir, "250", true, verbose);
 
-            cout << "Extracting firmware files from update PBP" << endl;
-            pspDecryptPSAR((u8*)&inData[psarOff], size - psarOff, outDir, true, nullptr, 0, verbose, false, false);
-
-            std::filesystem::copy(outDir + "/PSARDUMPER/stage1_psp_ipl.bin", outDir + "/nandipl.bin", std::filesystem::copy_options::overwrite_existing);
-
-            WriteFile((outDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
-            WriteFile((outDir + "/payload.bin").c_str(), (void*)tm250_payload, sizeof(tm250_payload));
-            WriteFile((outDir + "/tmctrl250.prx").c_str(), (void*)tm250_tmctrl250, sizeof(tm250_tmctrl250));
-
-            std::filesystem::remove_all(outDir + "/PSARDUMPER");
-
-            // tidy up
-            delete[] inData;
-        }
-        else
-            return 1;
+        WriteFile((installDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
+        WriteFile((installDir + "/payload.bin").c_str(), (void*)tm250_payload, sizeof(tm250_payload));
+        WriteFile((installDir + "/tmctrl250.prx").c_str(), (void*)tm250_tmctrl250, sizeof(tm250_tmctrl250));
     }
     else if (version.compare("2.71SE-C") == 0) {
-        std::string logStr;
-        string outDir = tmDir + "/271SE";
-        string tmpDir = outDir + "/tmp";
-        size = readFile(upDir + "/150.pbp", &inData);
-        if (size > 0) {
-            cout << "Setting up firmware 271 SE-C in " << outDir << endl;
-            u32 pspOff = *(u32*)&inData[0x20];
-            u32 psarOff = *(u32*)&inData[0x24];
+        string installDir = tmDir + "/271SE";
+        string tmpDir = installDir + "/tmp";
 
-            cout << "Extracting firmware files from update PBP" << endl;
-            pspDecryptPSAR((u8*)&inData[psarOff], size - psarOff, outDir, true, nullptr, 0, verbose, false, false);
+        extractFirmware(installDir, upDir, "150", false, verbose);
 
-            extract150Ipl((u8*)&inData[pspOff], psarOff - pspOff, outDir, verbose);
-            std::filesystem::copy(outDir + "/PSARDUMPER/stage1_psp_ipl.bin", outDir + "/nandipl.bin", std::filesystem::copy_options::overwrite_existing);
+        //Decrypt boot config files and insert systemctrl.prx
+        updateBtCfg(installDir + "/kd/pspbtcnf_game.txt", "/kd/impose.prx", "/kd/impose.prx\n/kd/systemctrl.prx");
+        updateBtCfg(installDir + "/kd/pspbtcnf_updater.txt", "/kd/vshbridge.prx", "/kd/vshbridge.prx\n/kd/systemctrl.prx");
 
-            //Decrypt boot config files and insert systemctrl.prx
-            updateBtCfg(outDir + "/kd/pspbtcnf_game.txt", "/kd/impose.prx", "/kd/impose.prx\n/kd/systemctrl.prx");
-            updateBtCfg(outDir + "/kd/pspbtcnf_updater.txt", "/kd/vshbridge.prx", "/kd/vshbridge.prx\n/kd/systemctrl.prx");
+        //Remove unused 1.50 firmware files
+        std::filesystem::remove_all(installDir + "/vsh/etc/");
+        std::filesystem::remove_all(installDir + "/vsh/resource/");
+        std::filesystem::remove(installDir + "/kd/mebooter_umdvideo.prx");
+        std::filesystem::remove(installDir + "/kd/reboot.prx");
 
-            //Remove unused 1.50 firmware files
-            std::filesystem::remove_all(outDir + "/vsh/etc/");
-            std::filesystem::remove_all(outDir + "/vsh/resource/");
-            std::filesystem::remove(outDir + "/kd/mebooter_umdvideo.prx");
-            std::filesystem::remove(outDir + "/kd/reboot.prx");
+        const char *plugins[11] = { "auth_plugin", "game_plugin", "impose_plugin", "msgdialog_plugin",
+                                    "msvideo_plugin", "music_plugin", "opening_plugin", "photo_plugin",
+                                    "sysconf_plugin", "update_plugin", "video_plugin" };
 
-            const char *plugins[11] = { "auth_plugin", "game_plugin", "impose_plugin", "msgdialog_plugin",
-                                        "msvideo_plugin", "music_plugin", "opening_plugin", "photo_plugin",
-                                        "sysconf_plugin", "update_plugin", "video_plugin" };
-
-            for (int i = 0; i < 11; i++) {
-                std::filesystem::remove(outDir + "/vsh/module/" + plugins[i] + ".prx");
-            }
-
-            WriteFile((outDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
-            WriteFile((outDir + "/payload.bin").c_str(), (void*)tm271_payload, sizeof(tm271_payload));
-            WriteFile((outDir + "/tmctrl150.prx").c_str(), (void*)tm271_tmctrl150, sizeof(tm271_tmctrl150));
-            WriteFile((outDir + "/tmctrl271.prx").c_str(), (void*)tm271_tmctrl271, sizeof(tm271_tmctrl271));
-            WriteFile((outDir + "/vsh/module/paf.prx").c_str(), (void*)tm271_paf, sizeof(tm271_paf));
-            WriteFile((outDir + "/vsh/module/vshmain.prx").c_str(), (void*)tm271_vshmain, sizeof(tm271_vshmain));
-
-            // tidy up
-            delete[] inData;
-
-            size = readFile(upDir + "/271.pbp", &inData);
-            if (size > 0) {
-                cout << "Setting up firmware 271 SE-C in " << outDir << endl;
-                pspOff = *(u32*)&inData[0x20];
-                psarOff = *(u32*)&inData[0x24];
-
-                cout << "Extracting firmware files from update PBP" << endl;
-                pspDecryptPSAR((u8*)&inData[psarOff], size - psarOff, tmpDir, true, nullptr, 0, verbose, false, false);
-
-                const auto copyOptions = std::filesystem::copy_options::overwrite_existing 
-                                       | std::filesystem::copy_options::recursive;
-
-                std::filesystem::copy(tmpDir + "/data/", outDir + "/data/", copyOptions);
-                std::filesystem::copy(tmpDir + "/font/", outDir + "/font/", copyOptions);
-                std::filesystem::copy(tmpDir + "/kd/", outDir + "/kn/", copyOptions);
-                std::filesystem::copy(tmpDir + "/vsh/etc/", outDir + "/vsh/etc/", copyOptions);
-                std::filesystem::copy(tmpDir + "/vsh/module/", outDir + "/vsh/nodule/", copyOptions);
-                std::filesystem::copy(tmpDir + "/vsh/resource/", outDir + "/vsh/resource/", copyOptions);
-
-                //Decrypt boot config files and insert systemctrl.prx
-                updateBtCfg(outDir + "/kn/pspbtcnf.txt", "/kd/modulemgr.prx", "/kd/modulemgr.prx\n/kd/systemctrl.prx");
-                updateBtCfg(outDir + "/kn/pspbtcnf_game.txt", "/kd/modulemgr.prx", "/kd/modulemgr.prx\n/kd/systemctrl.prx");
-                updateBtCfg(outDir + "/kn/pspbtcnf_updater.txt", "/kd/modulemgr.prx", "/kd/modulemgr.prx\n/kd/systemctrl.prx");
-
-                createSystemCtrl(outDir + "/kd/systemctrl.prx", tmpDir + "/PSARDUMPER/reboot.bin", 
-                                 tm271_systemctrl150, sizeof(tm271_systemctrl150), 0x678, false);
-
-                createSystemCtrl(outDir + "/kn/systemctrl.prx", outDir + "/PSARDUMPER/reboot.bin", 
-                                 tm271_systemctrl, sizeof(tm271_systemctrl), 0xa27c, true);
-
-                std::filesystem::remove_all(tmpDir);
-                std::filesystem::remove_all(outDir + "/PSARDUMPER");
-
-                // tidy up
-                delete[] inData;
-            }
-            else
-                return 1;
+        for (int i = 0; i < 11; i++) {
+            std::filesystem::remove(installDir + "/vsh/module/" + plugins[i] + ".prx");
         }
-        else
-                return 1;
+
+        WriteFile((installDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
+        WriteFile((installDir + "/payload.bin").c_str(), (void*)tm271_payload, sizeof(tm271_payload));
+        WriteFile((installDir + "/tmctrl150.prx").c_str(), (void*)tm271_tmctrl150, sizeof(tm271_tmctrl150));
+        WriteFile((installDir + "/tmctrl271.prx").c_str(), (void*)tm271_tmctrl271, sizeof(tm271_tmctrl271));
+        WriteFile((installDir + "/vsh/module/paf.prx").c_str(), (void*)tm271_paf, sizeof(tm271_paf));
+        WriteFile((installDir + "/vsh/module/vshmain.prx").c_str(), (void*)tm271_vshmain, sizeof(tm271_vshmain));
+
+        //Setup 271
+        extractFirmware(tmpDir, upDir, "271", false, verbose);
+
+        const auto copyOptions = std::filesystem::copy_options::overwrite_existing 
+                               | std::filesystem::copy_options::recursive;
+
+        std::filesystem::copy(tmpDir + "/data/", installDir + "/data/", copyOptions);
+        std::filesystem::copy(tmpDir + "/font/", installDir + "/font/", copyOptions);
+        std::filesystem::copy(tmpDir + "/kd/", installDir + "/kn/", copyOptions);
+        std::filesystem::copy(tmpDir + "/vsh/etc/", installDir + "/vsh/etc/", copyOptions);
+        std::filesystem::copy(tmpDir + "/vsh/module/", installDir + "/vsh/nodule/", copyOptions);
+        std::filesystem::copy(tmpDir + "/vsh/resource/", installDir + "/vsh/resource/", copyOptions);
+
+        //Decrypt boot config files and insert systemctrl.prx
+        updateBtCfg(installDir + "/kn/pspbtcnf.txt", "/kd/modulemgr.prx", "/kd/modulemgr.prx\n/kd/systemctrl.prx");
+        updateBtCfg(installDir + "/kn/pspbtcnf_game.txt", "/kd/modulemgr.prx", "/kd/modulemgr.prx\n/kd/systemctrl.prx");
+        updateBtCfg(installDir + "/kn/pspbtcnf_updater.txt", "/kd/modulemgr.prx", "/kd/modulemgr.prx\n/kd/systemctrl.prx");
+
+        createSystemCtrl(installDir + "/kd/systemctrl.prx", tmpDir + "/PSARDUMPER/reboot.bin", 
+                            tm271_systemctrl150, sizeof(tm271_systemctrl150), 0x678, false);
+
+        createSystemCtrl(installDir + "/kn/systemctrl.prx", installDir + "/PSARDUMPER/reboot.bin", 
+                            tm271_systemctrl, sizeof(tm271_systemctrl), 0xa27c, true);
+
+        std::filesystem::remove_all(tmpDir);
+        std::filesystem::remove_all(installDir + "/PSARDUMPER");        
     }
     else {
         cerr << "Unsupported version " << version << "!" << endl;
