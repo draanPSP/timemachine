@@ -13,6 +13,10 @@ target_sources(timemachine
   PRIVATE
     main.cpp
     tm_sloader.h
+    100_tmctrl100.h
+    100_payload.h
+    100B_tmctrl100B.h
+    100B_payload.h
     150_tmctrl150.h
     150_payload.h
     200_tmctrl200.h
@@ -35,6 +39,34 @@ add_custom_command(OUTPUT tm_sloader.h
         --c_style
         tm_sloader="${CMAKE_SOURCE_DIR}"/../../build/tm_loader/tm_sloader.bin
         tm_sloader.h
+)
+
+add_custom_command(OUTPUT 100_payload.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm100_payload="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/100/ipl_payload/payload_01g.bin
+        100_payload.h
+)
+
+add_custom_command(OUTPUT 100_tmctrl100.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm100_tmctrl100="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/100/tmctrl/tmctrl100.prx
+        100_tmctrl100.h
+)
+
+add_custom_command(OUTPUT 100B_payload.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm100B_payload="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/100_Bogus/ipl_payload/payload_01g.bin
+        100B_payload.h
+)
+
+add_custom_command(OUTPUT 100B_tmctrl100B.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm100B_tmctrl100B="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/100_Bogus/tmctrl/tmctrl100_Bogus.prx
+        100B_tmctrl100B.h
 )
 
 add_custom_command(OUTPUT 150_payload.h
