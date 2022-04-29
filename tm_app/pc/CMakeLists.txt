@@ -24,6 +24,8 @@ target_sources(timemachine
     200_payload.h
     250_tmctrl250.h
     250_payload.h
+    260_tmctrl260.h
+    260_payload.h
     271_tmctrl150.h
     271_tmctrl271.h
     271_payload.h
@@ -131,6 +133,20 @@ add_custom_command(OUTPUT 250_tmctrl250.h
         --c_style
         tm250_tmctrl250="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/250/tmctrl/tmctrl250.prx
         250_tmctrl250.h
+)
+
+add_custom_command(OUTPUT 260_payload.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm260_payload="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/260/ipl_payload/payload_01g.bin
+        260_payload.h
+)
+
+add_custom_command(OUTPUT 260_tmctrl260.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm260_tmctrl260="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/260/tmctrl/tmctrl260.prx
+        260_tmctrl260.h
 )
 
 add_custom_command(OUTPUT 271_payload.h

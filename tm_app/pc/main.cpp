@@ -26,6 +26,8 @@
 #include "200_tmctrl200.h"
 #include "250_payload.h"
 #include "250_tmctrl250.h"
+#include "260_payload.h"
+#include "260_tmctrl260.h"
 #include "271_payload.h"
 #include "271_tmctrl150.h"
 #include "271_tmctrl271.h"
@@ -58,7 +60,7 @@ void help(const char* exeName) {
     cout << "  -v, --verbose           enable verbose mode (mostly for debugging)" << endl;
     cout << "  -t, --tmdir=DIR         path to TM directory" << endl;
     cout << "  -u, --updir=DIR         path to updater pbps" << endl;
-    cout << "  -V, --version=VER       TM firmware version. Supported versions are: 1.00, 1.00Bogus, 1.50, 2.00, 2.50, 2.71SE-C, 3.40OE-A" << endl;
+    cout << "  -V, --version=VER       TM firmware version. Supported versions are: 1.00, 1.00Bogus, 1.50, 2.00, 2.50, 2.60, 2.71SE-C, 3.40OE-A" << endl;
     cout << "  -d, --downdaterdir=DIR  path to 1.00 downdater dump. Required for 1.00 and 1.00Bogus firmware installs" << endl;
     cout << "  -b, --bogusfix          install module to fix corrupt eboots in 1.00 Bogus firmware" << endl;
 }
@@ -339,6 +341,14 @@ int main(int argc, char *argv[]) {
         WriteFile((installDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
         WriteFile((installDir + "/payload.bin").c_str(), (void*)tm250_payload, sizeof(tm250_payload));
         WriteFile((installDir + "/tmctrl250.prx").c_str(), (void*)tm250_tmctrl250, sizeof(tm250_tmctrl250));
+    }
+    else if (version.compare("2.60") == 0) {
+        string installDir = tmDir + "/260";
+        extractFirmware(installDir, upDir, "260", true, true, verbose);
+
+        WriteFile((installDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
+        WriteFile((installDir + "/payload.bin").c_str(), (void*)tm260_payload, sizeof(tm260_payload));
+        WriteFile((installDir + "/tmctrl260.prx").c_str(), (void*)tm260_tmctrl260, sizeof(tm260_tmctrl260));
     }
     else if (version.compare("2.71SE-C") == 0) {
         string installDir = tmDir + "/271SE";
