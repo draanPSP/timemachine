@@ -21,6 +21,9 @@ typedef struct {
     u32 modInfoOffset;
     u32 unk3[2];
     u16 modAttr;
+    u16 unk4;
+    u32 unk5[2];
+    u32 isSignChecked;
 } __attribute__((__packed__)) LoadCoreExecInfo;
 
 extern int (* _sceKernelCheckExecFile)(u8 *buf, LoadCoreExecInfo *execInfo);

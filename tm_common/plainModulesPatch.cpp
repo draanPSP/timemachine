@@ -19,6 +19,9 @@ static u16 setModAttr(u8 *buf, LoadCoreExecInfo *execInfo)
 
 int sceKernelCheckExecFile_before(u8 *buf, LoadCoreExecInfo *execInfo)
 {
+	if (execInfo->isSignChecked)
+		execInfo->isSignChecked = 0;
+
 	if(((u32 *)buf)[0] == ELF_MAGIC)
 	{
 		int app_type  = execInfo->apiType;
