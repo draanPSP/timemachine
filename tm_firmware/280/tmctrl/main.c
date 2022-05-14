@@ -213,6 +213,10 @@ int OnModuleStart(SceModule2 *mod)
 	}
 	else if (strcmp(moduleName, "sceMSFAT_Driver") == 0)
 	{
+		// Remove validation in df_open checking data pointer not null
+		// Causes issues with registry init in vsh
+		_sw(0, text_addr + 0xe34);
+
 		// Fix get_stat failure
 		_sw(0, text_addr + 0x21f8);
 
