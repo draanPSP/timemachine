@@ -35,6 +35,8 @@
 #include "271_systemctrl.h"
 #include "271_paf.h"
 #include "271_vshmain.h"
+#include "280_payload.h"
+#include "280_tmctrl280.h"
 #include "340_payload.h"
 #include "340_tmctrl150.h"
 #include "340_tmctrl340.h"
@@ -60,7 +62,7 @@ void help(const char* exeName) {
     cout << "  -v, --verbose           enable verbose mode (mostly for debugging)" << endl;
     cout << "  -t, --tmdir=DIR         path to TM directory" << endl;
     cout << "  -u, --updir=DIR         path to updater pbps" << endl;
-    cout << "  -V, --version=VER       TM firmware version. Supported versions are: 1.00, 1.00Bogus, 1.50, 2.00, 2.50, 2.60, 2.71SE-C, 3.40OE-A" << endl;
+    cout << "  -V, --version=VER       TM firmware version. Supported versions are: 1.00, 1.00Bogus, 1.50, 2.00, 2.50, 2.60, 2.71SE-C, 2.80, 3.40OE-A" << endl;
     cout << "  -d, --downdaterdir=DIR  path to 1.00 downdater dump. Required for 1.00 and 1.00Bogus firmware installs" << endl;
     cout << "  -b, --bogusfix          install module to fix corrupt eboots in 1.00 Bogus firmware" << endl;
 }
@@ -407,6 +409,14 @@ int main(int argc, char *argv[]) {
 
         fs::remove_all(tmpDir);
         fs::remove_all(installDir + "/PSARDUMPER");  
+    }
+    else if (version.compare("2.80") == 0) {
+        string installDir = tmDir + "/280";
+        extractFirmware(installDir, upDir, "280", true, true, verbose);
+
+        WriteFile((installDir + "/tm_sloader.bin").c_str(), (void*)tm_sloader, sizeof(tm_sloader));
+        WriteFile((installDir + "/payload.bin").c_str(), (void*)tm280_payload, sizeof(tm280_payload));
+        WriteFile((installDir + "/tmctrl280.prx").c_str(), (void*)tm280_tmctrl280, sizeof(tm280_tmctrl280));
     }
     else if (version.compare("3.40OE-A") == 0) {
         string installDir = tmDir + "/340OE";

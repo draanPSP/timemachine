@@ -33,6 +33,8 @@ target_sources(timemachine
     271_systemctrl
     271_paf.h
     271_vshmain.h
+    280_tmctrl280.h
+    280_payload.h
     340_tmctrl150.h
     340_tmctrl340.h
     340_payload.h
@@ -196,6 +198,20 @@ add_custom_command(OUTPUT 271_vshmain.h
         --c_style
         tm271_vshmain="${CMAKE_SOURCE_DIR}"/../../cfw_binaries/271SEC/vshmain.prx
         271_vshmain.h
+)
+
+add_custom_command(OUTPUT 280_payload.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm280_payload="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/280/ipl_payload/payload_01g.bin
+        280_payload.h
+)
+
+add_custom_command(OUTPUT 280_tmctrl280.h
+    COMMAND $<TARGET_PROPERTY:bin2cpp,EXEC>
+        --c_style
+        tm280_tmctrl280="${CMAKE_SOURCE_DIR}"/../../build/tm_firmware/280/tmctrl/tmctrl280.prx
+        280_tmctrl280.h
 )
 
 add_custom_command(OUTPUT 340_payload.h
