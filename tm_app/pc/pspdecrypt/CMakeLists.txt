@@ -1,0 +1,16 @@
+target_sources(timemachine
+  PRIVATE
+    libkirk/AES.c
+    libkirk/amctrl.c
+    libkirk/bn.c
+    libkirk/ec.c
+    libkirk/kirk_engine.c
+    libkirk/SHA1.c
+    common.cpp
+    ipl_decrypt.cpp
+    kl4e.c
+    libLZR.c
+    PrxDecrypter.cpp
+    PsarDecrypter.cpp
+    pspdecrypt_lib.cpp
+    syscon_ipl_keys.c)
