@@ -3,9 +3,10 @@ add_subdirectory(rebootex)
 add_executable(tmctrl150)
 build_prx(tmctrl150 EXPORTS exports.exp)
 
-target_sources(tmctrl150 PRIVATE main.c flashemu.c)
+target_sources(tmctrl150 PRIVATE main.c)
 target_compile_options(tmctrl150 PRIVATE -fshort-wchar -Wno-address-of-packed-member)
-target_link_libraries(tmctrl150 PRIVATE pspdisplay_driver_weak pspreg_driver_weak pspsdk pspkernel)
+target_link_libraries(tmctrl150 PRIVATE tm_common::flash_emu pspdisplay_driver_weak pspreg_driver_weak pspsdk pspkernel)
+add_compile_definitions(PSP_FW_VERSION=150 TM_MS_PATH="ms0:/TM/150")
 
 add_custom_command(OUTPUT rebootex.h
     DEPENDS tmctrl::rebootex150_01g

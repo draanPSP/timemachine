@@ -3,9 +3,10 @@ add_subdirectory(rebootex)
 add_executable(tmctrl340)
 build_prx(tmctrl340 EXPORTS exports.exp)
 
-target_sources(tmctrl340 PRIVATE main.c flashemu.c)
+target_sources(tmctrl340 PRIVATE main.c)
 target_compile_options(tmctrl340 PRIVATE -fshort-wchar -Wno-address-of-packed-member)
-target_link_libraries(tmctrl340 PRIVATE utils pspsdk pspkernel340 SystemCtrlForKernel)
+target_link_libraries(tmctrl340 PRIVATE utils tm_common::flash_emu pspsdk pspkernel340 SystemCtrlForKernel)
+add_compile_definitions(PSP_FW_VERSION=340 TM_MS_PATH="ms0:/TM/340OE" FLASH_EMU_TOO_MANY_FILES_FIX FLASH_EMU_FLASH2)
 
 add_custom_command(OUTPUT rebootex.h
     DEPENDS tmctrl::rebootex340_01g
