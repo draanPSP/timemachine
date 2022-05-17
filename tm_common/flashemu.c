@@ -4,9 +4,24 @@
 #include <pspsysevent.h>
 #include <pspthreadman_kernel.h>
 
+#ifdef FLASH_EMU_FLASH2
+#include <pspinit.h>
+#endif
+
 #include "flashemu.h"
 
 char path[260];
+
+#if defined FLASH_EMU_HEAP_FREED_FIX || defined FLASH_EMU_TOO_MANY_FILES_FIX
+#define TRACK_OPEN_FILES
+FileHandler file_handler[MAX_FILES];
+#endif
+
+#ifdef FLASH_EMU_TOO_MANY_FILES_FIX
+int (* df_open)(s32 a0, char* path, s32 a2, s32 a3);
+int (* df_dopen)(s32 a0, char* path, s32 a2);
+int (* df_devctl)(s32 a0, s32 a1, s32 a2, s32 a3);
+#endif
 
 SceUID flashemu_sema;
 SceUID flashemuThid;
@@ -18,6 +33,9 @@ extern PspSysEventHandler sysEventHandler;
 
 #define Lock() sceKernelWaitSema(flashemu_sema, 1, NULL)
 #define UnLock() sceKernelSignalSema(flashemu_sema, 1)
+
+#define SCE_ERROR_ERRNO150_ENOTSUP    0x8001B000
+#define SCE_ERROR_ERRNO_NOT_SUPPORTED 0x80010086
 
 static int FlashEmu_IoInit();
 static int FlashEmu_IoExit();
@@ -127,9 +145,102 @@ int UninstallFlashEmu()
 	return 0;
 }
 
+void WaitMS()
+{
+	SceUID fd;
+	if (msNotReady)
+	{
+		while (1)
+		{
+			fd = sceIoOpen(TM_MS_PATH "/nandipl.bin", 1, 0);
+			if (fd >= 0)
+			{
+				sceIoClose(fd);
+				break;
+			}
+
+			sceKernelDelayThread(20000);
+		}
+
+		msNotReady = 0;
+	}
+
+	return;
+}
+
+#ifdef TRACK_OPEN_FILES
+
+int WaitFileAvailable(int index, char *path, int flags, SceMode mode)
+{
+	WaitMS();
+
+	SceUID fd;
+
+	while(1)
+	{
+		if(flags == DIR_FLAG)
+			fd = sceIoDopen(path);
+		else
+			fd = sceIoOpen(path, flags, mode);
+
+		if(fd != 0x80010018)
+			break;
+
+		int i;
+		for(i = 0; i < MAX_FILES; i++)
+		{
+			if(file_handler[i].opened && file_handler[i].unk_8 == 0 && file_handler[i].flags == PSP_O_RDONLY)
+			{
+				file_handler[i].offset = sceIoLseek(file_handler[i].fd, 0, PSP_SEEK_CUR);
+				sceIoClose(file_handler[i].fd);
+
+				file_handler[i].unk_8 = 1;
+			}
+		}
+	}
+
+	if(fd >= 0)
+	{
+		file_handler[index].unk_8 = 0;
+		file_handler[index].opened = 1;
+		file_handler[index].fd = fd;
+		file_handler[index].mode = mode;
+		file_handler[index].flags = flags;
+
+		if(file_handler[index].path != path)
+			strncpy(file_handler[index].path, path, sizeof(file_handler[index].path));
+	}
+
+	return fd;
+}
+
+SceUID GetFileIdByIndex(int index)
+{
+	if(file_handler[index].opened == 0) return -1;
+
+	if(file_handler[index].unk_8)
+	{
+		SceUID fd = WaitFileAvailable(index, file_handler[index].path, file_handler[index].flags, file_handler[index].mode);
+		if(fd >= 0)
+		{
+			sceIoLseek(fd, file_handler[index].offset, PSP_SEEK_SET);
+			file_handler[index].fd = fd;
+			file_handler[index].unk_8 = 0;
+			
+			return file_handler[index].fd;
+		}
+
+		return fd;
+	}
+
+	return file_handler[index].fd;
+}
+
+#endif
+
 static void BuildPath(const char *file)
 {
-	strncpy(path, "ms0:/TM/280", 12);
+	strcpy(path, TM_MS_PATH);
 	strcat(path, file);
 }
 
@@ -156,7 +267,9 @@ static int FlashEmu_IoDevctl(PspIoDrvFileArg *arg, const char *devname, unsigned
 	{
 	case 0x5802:
 		res = 0;
-
+		break;
+	case 0xb803:
+		res = 0;
 		break;
 
 	default:
@@ -169,7 +282,11 @@ static int FlashEmu_IoDevctl(PspIoDrvFileArg *arg, const char *devname, unsigned
 
 static int FlashEmu_IoUnk21(PspIoDrvFileArg *arg)
 {
-	return 0x80010086;
+#if PSP_FW_VERSION == 150
+	return SCE_ERROR_ERRNO150_ENOTSUP;
+#else
+	return SCE_ERROR_ERRNO_NOT_SUPPORTED;
+#endif
 }
 
 static int DummyReturnZero()
@@ -179,7 +296,11 @@ static int DummyReturnZero()
 
 static int DummyReturnNotSupported()
 {
-	return 0x80010086;
+#if PSP_FW_VERSION == 150
+	return SCE_ERROR_ERRNO150_ENOTSUP;
+#else
+	return SCE_ERROR_ERRNO_NOT_SUPPORTED;
+#endif
 }
 
 static int chdir_main(int *argv)
@@ -288,16 +409,45 @@ static int dread_main(int *argv)
 	SceIoDirent *dir = (SceIoDirent *)argv[1];
 
 	Lock();
+	
+#ifdef TRACK_OPEN_FILES
+	SceUID fd = GetFileIdByIndex((int)arg->arg);
+	if(fd >= 0)
+	{
+		int res = sceIoDread(fd, dir);
+		UnLock();
+		return res;
+	}
+	UnLock();
+
+	return fd;
+#else
 	int res = sceIoDread((SceUID)arg->arg, dir);
 	UnLock();
 
 	return res;
+#endif
 }
 
 static int dclose_main(PspIoDrvFileArg *arg)
 {
 	Lock();
 
+#ifdef TRACK_OPEN_FILES
+	int index = (int)arg->arg;
+
+	SceUID fd = GetFileIdByIndex(index);
+	if(fd >= 0)
+	{
+		int res = sceIoDclose(fd);
+		file_handler[index].opened = 0;
+		UnLock();
+		return res;
+	}
+
+	UnLock();
+	return fd;
+#else
 	int res = sceIoDclose((SceUID)arg->arg);
 	if (res < 0)
 	{
@@ -312,6 +462,7 @@ static int dclose_main(PspIoDrvFileArg *arg)
 
 	UnLock();
 	return res;
+#endif
 }
 
 static int FlashEmu_IoDread(PspIoDrvFileArg *arg, SceIoDirent *dir)
@@ -336,7 +487,29 @@ static int dopen_main(int *argv)
 
 	Lock();
 	BuildPath(dirname);
+	
+#ifdef TRACK_OPEN_FILES
+	int i;
+	for(i = 0; i < MAX_FILES; i++)
+	{		
+		if(file_handler[i].opened == 0)
+		{
+			SceUID fd = WaitFileAvailable(i, path, DIR_FLAG, 0);
+			if(fd >= 0)
+			{
+				arg->arg = (void *)i;
+				UnLock();
+				return 0;
+			}
 
+			UnLock();
+			return fd;
+		}
+	}
+
+	UnLock();
+	return 0x80010018;
+#else
 	int dfd = sceIoDopen(path);
 	if (dfd < 0)
 	{
@@ -348,6 +521,7 @@ static int dopen_main(int *argv)
 
 	UnLock();
 	return 0;
+#endif
 }
 
 static int FlashEmu_IoDopen(PspIoDrvFileArg *arg, const char *dirName)
@@ -439,10 +613,24 @@ static int lseek_main(int *argv)
 	int whence = argv[2];
 
 	Lock();
+	
+#ifdef TRACK_OPEN_FILES
+	SceUID fd = GetFileIdByIndex((int)arg->arg);
+	if(fd >= 0)
+	{
+		int res = sceIoLseek(fd, ofs, whence);
+		UnLock();
+		return res;
+	}
+
+	UnLock();
+	return fd;
+#else
 	int res = sceIoLseek((SceUID)arg->arg, ofs, whence);
 	UnLock();
 
 	return res;
+#endif
 }
 
 SceOff FlashEmu_IoLseek(PspIoDrvFileArg *arg, SceOff ofs, int whence)
@@ -464,6 +652,25 @@ static int write_main(int *argv)
 	int res;
 
 	Lock();
+	
+#ifdef TRACK_OPEN_FILES
+	SceUID fd = GetFileIdByIndex((int)arg->arg);
+	if(fd >= 0)
+	{
+		if(!data && len == 0)
+		{
+			UnLock();
+			return 0;
+		}
+
+		int written = sceIoWrite(fd, data, len);
+		UnLock();
+		return written;
+	}
+
+	UnLock();
+	return fd;
+#else
 	if ((SceUID)arg->arg >= 0)
 	{
 		res = sceIoWrite((SceUID)arg->arg, data, len);
@@ -475,6 +682,7 @@ static int write_main(int *argv)
 	UnLock();
 
 	return res;
+#endif
 }
 
 static int FlashEmu_IoWrite(PspIoDrvFileArg *arg, const char *data, int len)
@@ -493,9 +701,22 @@ static int read_main(int *argv)
 	PspIoDrvFileArg *arg = (PspIoDrvFileArg *)argv[0];
 	char *data = (char *)argv[1];
 	int len = argv[2];
-	int res;
-
+	
 	Lock();
+
+#ifdef TRACK_OPEN_FILES
+	SceUID fd = GetFileIdByIndex((int)arg->arg);
+	if(fd >= 0)
+	{
+		int read = sceIoRead(fd, data, len);
+		UnLock();
+		return read;
+	}
+
+	UnLock();
+	return fd;
+#else
+	int res;
 	if ((SceUID)arg->arg >= 0)
 	{
 		res = sceIoRead((SceUID)arg->arg, data, len);
@@ -507,6 +728,7 @@ static int read_main(int *argv)
 
 	UnLock();
 	return res;
+#endif
 }
 
 static int FlashEmu_IoRead(PspIoDrvFileArg *arg, char *data, int len)
@@ -528,7 +750,31 @@ static int open_main(int *argv)
 	SceMode mode = (SceMode)argv[3];
 
 	Lock();
+	
 	BuildPath(file);
+	
+#ifdef TRACK_OPEN_FILES
+	int i;
+	for(i = 0; i < MAX_FILES; i++)
+	{
+		if(file_handler[i].opened == 0)
+		{
+			SceUID fd = WaitFileAvailable(i, path, flags, mode);
+			if(fd >= 0)
+			{
+				arg->arg = (void *)i;
+				UnLock();
+				return 0;
+			}
+
+			UnLock();
+			return fd;
+		}
+	}
+
+	UnLock();
+	return 0x80010018;
+#else
 
 	SceUID fd = sceIoOpen(path, flags, mode);
 	arg->arg = (void *)fd;
@@ -541,6 +787,7 @@ static int open_main(int *argv)
 	UnLock();
 
 	return 0;
+#endif
 }
 
 static int FlashEmu_IoOpen(PspIoDrvFileArg *arg, char *file, int flags, SceMode mode)
@@ -553,6 +800,51 @@ static int FlashEmu_IoOpen(PspIoDrvFileArg *arg, char *file, int flags, SceMode 
 	argv[3] = (int)mode;
 
 	return sceKernelExtendKernelStack(0x4000, (void *)open_main, (void *)argv);
+}
+
+static int close_main(PspIoDrvFileArg *arg)
+{
+	int res = 0;
+
+#ifdef TRACK_OPEN_FILES
+	int index = (int)arg->arg;
+
+	SceUID fd = GetFileIdByIndex(index);
+	if(fd < 0)
+		return fd;
+	
+	int ret = sceIoClose(fd);
+	if(ret < 0)
+		return ret;
+
+	file_handler[index].opened = 0;
+#else
+	if ((SceUID)arg->arg >= 0)
+	{
+		res = sceIoClose((SceUID)arg->arg);
+	}
+	else
+	{
+		res = 0;
+	}
+	arg->arg = (void *)-1;
+
+	if (res < 0)
+	{
+		return res;
+	}
+#endif
+
+	return 0;
+}
+
+static int FlashEmu_IoClose(PspIoDrvFileArg *arg)
+{
+	Lock();
+	int res = sceKernelExtendKernelStack(0x4000, (void *)close_main, (void *)arg);
+	UnLock();
+
+	return res;
 }
 
 static int FlashEmu_IoIoctl(PspIoDrvFileArg *arg, unsigned int cmd, void *indata, int inlen, void *outdata, int outlen)
@@ -603,43 +895,117 @@ static int FlashEmu_IoIoctl(PspIoDrvFileArg *arg, unsigned int cmd, void *indata
 	return res;
 }
 
-static int close_main(PspIoDrvFileArg *arg)
-{
-	int res = 0;
-
-	if ((SceUID)arg->arg >= 0)
-	{
-		res = sceIoClose((SceUID)arg->arg);
-	}
-	else
-	{
-		res = 0;
-	}
-	arg->arg = (void *)-1;
-
-	if (res < 0)
-	{
-		return res;
-	}
-
-	return 0;
-}
-
-static int FlashEmu_IoClose(PspIoDrvFileArg *arg)
-{
-	Lock();
-	int res = sceKernelExtendKernelStack(0x4000, (void *)close_main, (void *)arg);
-	UnLock();
-
-	return res;
-}
-
 static int FlashEmu_IoInit()
 {
 	flashemu_sema = sceKernelCreateSema("FlashSema", 0, 1, 1, NULL);
 
 	return 0;
 }
+
+#ifdef FLASH_EMU_HEAP_FREED_FIX
+
+int (*_free_heap_all)(void);
+
+int free_heap_all_hook(void)
+{
+	for(int i = 0; i < MAX_FILES; i++)
+	{
+		if(file_handler[i].opened && file_handler[i].unk_8 == 0 && file_handler[i].flags != DIR_FLAG)
+		{
+			file_handler[i].offset = sceIoLseek(file_handler[i].fd, 0, PSP_SEEK_CUR);
+			file_handler[i].unk_8 = 1;
+			sceIoClose(file_handler[i].fd);
+		}
+	}
+
+	return _free_heap_all();
+}
+
+#endif
+
+#ifdef FLASH_EMU_TOO_MANY_FILES_FIX
+
+int CloseOpenFile(int *argv)
+{
+	Lock();
+	int i;
+
+	for(i = 0; i < MAX_FILES; i++)
+	{
+		if(file_handler[i].opened && file_handler[i].unk_8 == 0 && file_handler[i].flags == PSP_O_RDONLY)
+		{
+			file_handler[i].offset = sceIoLseek(file_handler[i].fd, 0, PSP_SEEK_CUR);
+			sceIoClose(file_handler[i].fd);
+
+			file_handler[i].unk_8 = 1;
+
+			UnLock();
+			return 0;
+		}
+	}
+
+	UnLock();
+
+	return 0x80010018;
+}
+
+int df_dopenPatched(s32 a0, char* path, s32 a2)
+{
+	while(1) {
+		int res = df_dopen(a0, path, a2);
+		if (res != 0x80010018)
+			return res;
+
+		char* p = strstr(path, TM_MS_PATH);
+		if (p != 0)
+			break;
+
+		res = sceKernelExtendKernelStack(0x4000, (void *)CloseOpenFile, 0);
+		if (res < 0)
+			return res;
+	}
+	return 0x80010018;
+}
+
+int df_openPatched(s32 a0, char* path, s32 a2, s32 a3)
+{
+	while(1) {
+		int res = df_open(a0, path, a2, a3);
+		if (res != 0x80010018)
+			return res;
+
+		char * p = strstr(path, TM_MS_PATH);
+		if (p != 0)
+			break;
+
+		res = sceKernelExtendKernelStack(0x4000, (void *)CloseOpenFile, 0);
+		if (res < 0)
+			return res;
+  }
+  return 0x80010018;
+}
+
+int df_devctlPatched(s32 a0, s32 a1, s32 a2, s32 a3)
+{
+	int res;
+
+	while(1)
+	{
+		res = df_devctl(a0, a1, a2, a3);
+		if (res != 0x80010018) {
+			return res;
+		}
+
+		res = sceKernelExtendKernelStack(0x4000, (void *)CloseOpenFile, 0);
+
+		if (res < 0)
+			break;
+	}
+
+	return res;
+}
+
+#endif
 
 void sceLfatfsWaitReady()
 {
@@ -649,34 +1015,20 @@ void sceLfatfsWaitReady()
 	return;
 }
 
-void WaitMS()
-{
-	SceUID fd;
-	if (msNotReady)
-	{
-		while (1)
-		{
-			fd = sceIoOpen("ms0:/TM/280/nandipl.bin", 1, 0);
-			if (fd >= 0)
-			{
-				sceIoClose(fd);
-				break;
-			}
-
-			sceKernelDelayThread(20000);
-		}
-
-		msNotReady = 0;
-	}
-
-	return;
-}
-
 int SceLfatfsAssign()
 {
 	WaitMS();
 	sceIoAssign("flash0:", "lflash0:0,0", "flashfat0:", IOASSIGN_RDONLY, 0, 0);
 	sceIoAssign("flash1:", "lflash0:0,1", "flashfat1:", IOASSIGN_RDWR, 0, 0);
+
+#ifdef FLASH_EMU_FLASH2
+	int appType = sceKernelInitApitype();
+
+	if (appType == PSP_INIT_KEYCONFIG_VSH) {
+		sceIoAssign("flash2:","lflash0:0,2","flashfat2:", IOASSIGN_RDWR, 0, 0);
+	}
+#endif
+
 	flashemuThid = -1;
 	sceKernelExitDeleteThread(0);
 

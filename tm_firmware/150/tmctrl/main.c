@@ -8,7 +8,7 @@
 #include <psputilsforkernel.h>
 
 #include "main.h"
-#include "flashemu.h"
+#include <flashemu.h>
 #include <rebootex.h>
 
 PSP_MODULE_INFO("TimeMachine_Control", PSP_MODULE_KERNEL | PSP_MODULE_SINGLE_START | PSP_MODULE_SINGLE_LOAD | PSP_MODULE_NO_STOP, 1, 0);

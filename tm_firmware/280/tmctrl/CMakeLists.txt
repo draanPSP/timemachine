@@ -3,9 +3,10 @@ add_subdirectory(rebootex)
 add_executable(tmctrl280)
 build_prx(tmctrl280 EXPORTS exports.exp)
 
-target_sources(tmctrl280 PRIVATE main.c flashemu.c)
+target_sources(tmctrl280 PRIVATE main.c)
 target_compile_options(tmctrl280 PRIVATE -fshort-wchar -Wno-address-of-packed-member)
-target_link_libraries(tmctrl280 PRIVATE utils tm_common::plainmodulespatch pspsdk pspkernel280)
+target_link_libraries(tmctrl280 PRIVATE utils tm_common::flash_emu tm_common::plainmodulespatch pspsdk pspkernel280)
+add_compile_definitions(PSP_FW_VERSION=280 TM_MS_PATH="ms0:/TM/280")
 
 add_custom_command(OUTPUT rebootex.h
     DEPENDS tmctrl::rebootex280_01g
