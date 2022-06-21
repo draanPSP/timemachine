@@ -1,0 +1,24 @@
+PSP_BEGIN_EXPORTS
+
+PSP_EXPORT_START(syslib, 0, 0x8000)
+PSP_EXPORT_FUNC_HASH(module_start)
+PSP_EXPORT_VAR_HASH(module_info)
+PSP_EXPORT_END
+
+PSP_EXPORT_START(ZhreadManForKernel, 0x11, 0x0001)
+PSP_EXPORT_FUNC_NID(sceKernelDeleteFplPatched, 0xED1410E0)
+PSP_EXPORT_FUNC_NID(sceKernelAllocateFplPatched, 0xD979E9BF)
+PSP_EXPORT_FUNC_NID(sceKernelCreateFplPatched, 0xC07BB470)
+PSP_EXPORT_FUNC_NID(sceKernelDeleteEventFlagPatched, 0xEF9E4C70)
+PSP_EXPORT_FUNC_NID(sceKernelWaitEventFlagPatched, 0x402FCF22)
+PSP_EXPORT_FUNC_NID(sceKernelSetEventFlagPatched, 0x1FB15A32)
+PSP_EXPORT_FUNC_NID(sceKernelCreateEventFlagPatched, 0x55C20A00)
+PSP_EXPORT_FUNC_NID(sceKernelDelayThreadPatched, 0xCEADEB47)
+PSP_EXPORT_FUNC_NID(sceKernelDeleteMutexPatched, 0xF8170FBE)
+PSP_EXPORT_FUNC_NID(sceKernelUnlockMutexPatched, 0x6B30100F)
+PSP_EXPORT_FUNC_NID(sceKernelTryLockMutexPatched, 0x0DDCD2C9)
+PSP_EXPORT_FUNC_NID(sceKernelLockMutexPatched, 0xB011B11F)
+PSP_EXPORT_FUNC_NID(sceKernelCreateMutexPatched, 0xB7D098C6)
+PSP_EXPORT_END
+
+PSP_END_EXPORTS
