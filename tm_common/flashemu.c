@@ -3,12 +3,15 @@
 #include <pspiofilemgr_kernel.h>
 #include <pspsysevent.h>
 #include <pspthreadman_kernel.h>
+#include <pspsysmem_kernel.h>
 
 #ifdef FLASH_EMU_FLASH2
 #include <pspinit.h>
 #endif
 
 #include "flashemu.h"
+
+#define MS0 "ms0:"
 
 char path[260];
 
@@ -152,7 +155,7 @@ void WaitMS()
 	{
 		while (1)
 		{
-			fd = sceIoOpen(TM_MS_PATH "/nandipl.bin", 1, 0);
+			fd = sceIoOpen(MS0 TM_PATH "/nandipl.bin", 1, 0);
 			if (fd >= 0)
 			{
 				sceIoClose(fd);
@@ -240,7 +243,7 @@ SceUID GetFileIdByIndex(int index)
 
 static void BuildPath(const char *file)
 {
-	strcpy(path, TM_MS_PATH);
+	strcpy(path, MS0 TM_PATH);
 	strcat(path, file);
 }
 
@@ -956,7 +959,7 @@ int df_dopenPatched(s32 a0, char* path, s32 a2)
 		if (res != 0x80010018)
 			return res;
 
-		char* p = strstr(path, TM_MS_PATH);
+		char* p = strstr(path, MS0 TM_PATH);
 		if (p != 0)
 			break;
 
@@ -974,7 +977,7 @@ int df_openPatched(s32 a0, char* path, s32 a2, s32 a3)
 		if (res != 0x80010018)
 			return res;
 
-		char * p = strstr(path, TM_MS_PATH);
+		char * p = strstr(path, MS0 TM_PATH);
 		if (p != 0)
 			break;
 
@@ -1022,7 +1025,7 @@ int SceLfatfsAssign()
 	sceIoAssign("flash1:", "lflash0:0,1", "flashfat1:", IOASSIGN_RDWR, 0, 0);
 
 #ifdef FLASH_EMU_FLASH2
-	int appType = sceKernelInitApitype();
+	int appType = sceKernelInitKeyConfig();
 
 	if (appType == PSP_INIT_KEYCONFIG_VSH) {
 		sceIoAssign("flash2:","lflash0:0,2","flashfat2:", IOASSIGN_RDWR, 0, 0);

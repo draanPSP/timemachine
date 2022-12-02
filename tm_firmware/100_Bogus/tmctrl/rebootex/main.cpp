@@ -45,7 +45,7 @@ namespace {
 
 	int sceBootLfatOpenPatched(char *filename) {
 
-		strcpy(path, "/TM/100_Bogus");
+		strcpy(path, TM_PATH);
 
 		if(strcmp(filename, "/kd/lfatfs.prx") == 0) {
 			strcat(path, "/tmctrl100_Bogus.prx");

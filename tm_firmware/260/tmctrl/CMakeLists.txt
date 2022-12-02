@@ -6,7 +6,6 @@ build_prx(tmctrl260 EXPORTS exports.exp)
 target_sources(tmctrl260 PRIVATE main.c)
 target_compile_options(tmctrl260 PRIVATE -fshort-wchar -Wno-address-of-packed-member)
 target_link_libraries(tmctrl260 PRIVATE utils tm_common::moduleutils tm_common::flash_emu tm_common::plainmodulespatch pspreg_driver_weak pspsdk pspkernel)
-add_compile_definitions(PSP_FW_VERSION=260 TM_MS_PATH="ms0:/TM/260")
 
 add_custom_command(OUTPUT rebootex.h
     DEPENDS tmctrl::rebootex260_01g
