@@ -5,7 +5,7 @@ build_prx(tmctrl100_Bogus EXPORTS exports.exp)
 
 target_sources(tmctrl100_Bogus PRIVATE main.c)
 target_compile_options(tmctrl100_Bogus PRIVATE -fshort-wchar -Wno-address-of-packed-member)
-target_link_libraries(tmctrl100_Bogus PRIVATE utils tm_common::flash_emu pspreg_driver_weak pspsdk pspkernel)
+target_link_libraries(tmctrl100_Bogus PRIVATE utils tm_common::moduleutils tm_common::flash_emu pspreg_driver_weak pspsdk pspkernel)
 add_compile_definitions(PSP_FW_VERSION=100 TM_MS_PATH="ms0:/TM/100_Bogus" FLASH_EMU_HEAP_FREED_FIX)
 
 add_custom_command(OUTPUT rebootex.h

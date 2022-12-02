@@ -5,7 +5,8 @@ build_prx(tmctrl150_340 EXPORTS exports.exp)
 
 target_sources(tmctrl150_340 PRIVATE main.c)
 target_compile_options(tmctrl150_340 PRIVATE -fshort-wchar -Wno-address-of-packed-member)
-target_link_libraries(tmctrl150_340 PRIVATE utils pspreg_driver_weak pspsdk pspkernel)
+target_link_libraries(tmctrl150_340 PRIVATE utils tm_common::moduleutils pspreg_driver_weak pspsdk pspkernel)
+add_compile_definitions(PSP_FW_VERSION=150)
 
 add_custom_command(OUTPUT rebootex.h
     DEPENDS tmctrl::rebootex150_340

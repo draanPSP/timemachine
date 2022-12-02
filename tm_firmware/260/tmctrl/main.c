@@ -11,9 +11,9 @@
 
 #include <pspmacro.h>
 #include <plainModulesPatch.h>
-
-#include "main.h"
+#include <moduleUtils.h>
 #include <flashemu.h>
+
 #include <rebootex.h>
 
 PSP_MODULE_INFO("TimeMachine_Control", PSP_MODULE_KERNEL | PSP_MODULE_SINGLE_START | PSP_MODULE_SINGLE_LOAD | PSP_MODULE_NO_STOP, 1, 0);
@@ -39,6 +39,7 @@ int (* GetMsSize)(void);
 int start_thread;
 static SceModule2 *last_module;
 
+typedef int (* STMOD_HANDLER)(SceModule2 *);
 STMOD_HANDLER stmod_handler = NULL;
 
 int ValidateSeekPatched(u32 *drv_str, SceOff ofs)
@@ -71,36 +72,6 @@ int ValidateSeekP1Patched(u32 *drv_str, SceOff ofs)
 		return 0;
 
 	return 1;
-}
-
-u32 GetModuleExportFuncAddr(char *moduleName, char *libraryName, int nid)
-{
-	SceModule2 *mod = (SceModule2 *)sceKernelFindModuleByName(moduleName);
-	if (mod != NULL)
-	{
-		SceLibraryEntryTable *libEntryTable = mod->ent_top;
-		int i;
-
-		if (mod->ent_size <= 0)
-			return 0;
-
-		while ((u32)libEntryTable < ((u32)mod->ent_top + mod->ent_size))
-		{
-			if (strcmp(libEntryTable->libname, libraryName) == 0)
-			{
-				/* Find the specifed NID and it's offset with the entry table */
-				for (i = 0; i < libEntryTable->stubcount; i++)
-				{
-					if (((int *)libEntryTable->entrytable)[i] == nid)
-					{
-						return ((u32 *)libEntryTable->entrytable)[libEntryTable->stubcount + libEntryTable->vstubcount + i];
-					}
-				}
-			}
-			libEntryTable = (SceLibraryEntryTable *)((u32)libEntryTable + (libEntryTable->len * 4));
-		}
-	}
-	return 0;
 }
 
 STMOD_HANDLER SetModuleStartUpHandler(STMOD_HANDLER handler)

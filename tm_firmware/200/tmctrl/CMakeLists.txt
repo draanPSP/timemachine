@@ -5,7 +5,7 @@ build_prx(tmctrl200 EXPORTS exports.exp)
 
 target_sources(tmctrl200 PRIVATE main.c)
 target_compile_options(tmctrl200 PRIVATE -fshort-wchar -Wno-address-of-packed-member)
-target_link_libraries(tmctrl200 PRIVATE utils tm_common::flash_emu tm_common::plainmodulespatch pspreg_driver_weak pspsdk pspkernel)
+target_link_libraries(tmctrl200 PRIVATE utils tm_common::moduleutils tm_common::flash_emu tm_common::plainmodulespatch pspreg_driver_weak pspsdk pspkernel)
 add_compile_definitions(PSP_FW_VERSION=200 TM_MS_PATH="ms0:/TM/200")
 
 add_custom_command(OUTPUT rebootex.h
