@@ -69,7 +69,7 @@ int main() {
 	MAKE_CALL(0x04000364, loadPayloadEx);
 
 	//Change payload entry point to payloadex
-	_sw(0x3c1988fc, LD_PAYLOADEX_ADDR);
+	_sw(LUI(GPREG_T9, 0x88fc), LD_PAYLOADEX_ADDR);
 
 #if PSP_MODEL == 1
 	REDIRECT_FUNCTION(0x04001170, seedPatch);

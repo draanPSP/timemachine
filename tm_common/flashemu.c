@@ -5,8 +5,11 @@
 #include <pspthreadman_kernel.h>
 #include <pspsysmem_kernel.h>
 
-#ifdef FLASH_EMU_FLASH2
+#if PSP_FW_VERSION > 300 || defined FLASH_EMU_FLASH2
 #include <pspinit.h>
+
+#define PSP_INIT_KEYCONFIG_APP 0x400
+#define PSP_BOOT_FLASH3 0x80
 #endif
 
 #include "flashemu.h"
@@ -20,7 +23,7 @@ char path[260];
 FileHandler file_handler[MAX_FILES];
 #endif
 
-#ifdef FLASH_EMU_TOO_MANY_FILES_FIX
+#if defined FLASH_EMU_TOO_MANY_FILES_FIX && PSP_FW_VERSION < 660
 int (* df_open)(s32 a0, char* path, s32 a2, s32 a3);
 int (* df_dopen)(s32 a0, char* path, s32 a2);
 int (* df_devctl)(s32 a0, s32 a1, s32 a2, s32 a3);
@@ -119,7 +122,11 @@ static PspIoDrvFuncs flashFatFuncs = {
 };
 
 static PspIoDrv lflashDrv = {"lflash", 0x4, 0x200, 0, &lflashFuncs};
+#if PSP_FW_VERSION >= 500
+static PspIoDrv flashFatDrv = {"flashfat", 0x1E0010, 1, "FAT over Flash", &flashFatFuncs};
+#else
 static PspIoDrv flashFatDrv = {"flashfat", 0x10, 1, "FAT over USB Mass", &flashFatFuncs};
+#endif
 
 int InstallFlashEmu()
 {
@@ -161,8 +168,11 @@ void WaitMS()
 				sceIoClose(fd);
 				break;
 			}
-
+#if PSP_FW_VER >= 660
+			sceKernelDelayThreadCB(20000);
+#else
 			sceKernelDelayThread(20000);
+#endif
 		}
 
 		msNotReady = 0;
@@ -274,6 +284,12 @@ static int FlashEmu_IoDevctl(PspIoDrvFileArg *arg, const char *devname, unsigned
 	case 0xb803:
 		res = 0;
 		break;
+#if PSP_FW_VERSION >= 500
+	case 0x208813:
+		res = 0;
+		if(sceKernelGetModel() == 0 || arg->fs_num != 3)
+			res = 0x80010016;
+#endif
 
 	default:
 		//Kprintf("Unknown devctl command 0x%08X\n", res);
@@ -906,7 +922,6 @@ static int FlashEmu_IoInit()
 }
 
 #ifdef FLASH_EMU_HEAP_FREED_FIX
-
 int (*_free_heap_all)(void);
 
 int free_heap_all_hook(void)
@@ -923,11 +938,9 @@ int free_heap_all_hook(void)
 
 	return _free_heap_all();
 }
-
 #endif
 
 #ifdef FLASH_EMU_TOO_MANY_FILES_FIX
-
 int CloseOpenFile(int *argv)
 {
 	Lock();
@@ -952,6 +965,7 @@ int CloseOpenFile(int *argv)
 	return 0x80010018;
 }
 
+#if PSP_FW_VERSION < 660
 int df_dopenPatched(s32 a0, char* path, s32 a2)
 {
 	while(1) {
@@ -1007,7 +1021,34 @@ int df_devctlPatched(s32 a0, s32 a1, s32 a2, s32 a3)
 
 	return res;
 }
+#endif
+#endif
 
+#if PSP_FW_VERSION >= 500
+int sceLFatFsDevkitVersion()
+{
+#if PSP_FW_VERSION == 661
+	return 0x6060110;
+#elif PSP_FW_VERSION == 500
+	return 0x05000010;
+#else
+#error
+#endif
+}
+
+int sceLFatFs_driver_F1FBA85F()
+{
+	return 0;
+}
+#endif
+
+#if PSP_FW_VERSION >= 660
+int sceLFatFs_driver_BED8D616()
+{
+	return 0;
+}
+
+int sceLFatFs_driver_E63DDEB5;
 #endif
 
 void sceLfatfsWaitReady()
@@ -1024,11 +1065,21 @@ int SceLfatfsAssign()
 	sceIoAssign("flash0:", "lflash0:0,0", "flashfat0:", IOASSIGN_RDONLY, 0, 0);
 	sceIoAssign("flash1:", "lflash0:0,1", "flashfat1:", IOASSIGN_RDWR, 0, 0);
 
-#ifdef FLASH_EMU_FLASH2
+#if PSP_FW_VERSION >= 300 || defined FLASH_EMU_FLASH2
 	int appType = sceKernelInitKeyConfig();
 
-	if (appType == PSP_INIT_KEYCONFIG_VSH) {
+	if (appType == PSP_INIT_KEYCONFIG_VSH || appType == PSP_INIT_KEYCONFIG_GAME || appType == PSP_INIT_KEYCONFIG_APP) {
 		sceIoAssign("flash2:","lflash0:0,2","flashfat2:", IOASSIGN_RDWR, 0, 0);
+	}
+#endif
+
+#if PSP_FW_VERSION >= 500
+	if (sceKernelGetModel() != 0)
+	{
+		if (appType == PSP_INIT_KEYCONFIG_VSH ||
+			((appType == PSP_INIT_KEYCONFIG_GAME || appType == PSP_INIT_KEYCONFIG_APP) && sceKernelBootFrom() == PSP_BOOT_FLASH3)) {
+			sceIoAssign("flash3:","lflash0:0,3","flashfat3:", IOASSIGN_RDWR, 0, 0);
+		}
 	}
 #endif
 

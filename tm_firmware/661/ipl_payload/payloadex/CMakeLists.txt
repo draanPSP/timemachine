@@ -9,11 +9,11 @@ configure_file(
 
 add_executable(payloadex_661_01g)
 add_executable(tmctrl::payloadex_661_01g ALIAS payloadex_661_01g)
-target_sources(payloadex_661_01g PRIVATE main.cpp patches.h)
+target_sources(payloadex_661_01g PRIVATE main.cpp)
 target_compile_options(payloadex_661_01g PRIVATE -Wno-main)
-target_link_libraries(payloadex_661_01g PRIVATE tm_common::crt c utils iplsdk::cache iplsdk::ff_ro iplsdk::lowio iplsdk::ms tm_common::common)
+target_link_libraries(payloadex_661_01g PRIVATE tm_common::crt c utils iplsdk::cache iplsdk::ff_ro iplsdk::lowio iplsdk::ms tm_common::common tm661me_common::rebootpatches)
 target_link_options(payloadex_661_01g PRIVATE -nostdlib -T${CMAKE_CURRENT_BINARY_DIR}/linker.x)
-target_compile_definitions(payloadex_661_01g PRIVATE PSP_MODEL=0)
+target_compile_definitions(payloadex_661_01g PRIVATE PSP_MODEL=0 PAYLOADEX)
 
 add_custom_command(
     TARGET payloadex_661_01g
@@ -23,11 +23,11 @@ add_custom_command(
 
 add_executable(payloadex_661_02g)
 add_executable(tmctrl::payloadex_661_02g ALIAS payloadex_661_02g)
-target_sources(payloadex_661_02g PRIVATE main.cpp patches.h)
+target_sources(payloadex_661_02g PRIVATE main.cpp)
 target_compile_options(payloadex_661_02g PRIVATE -Wno-main)
-target_link_libraries(payloadex_661_02g PRIVATE tm_common::crt c utils iplsdk::cache iplsdk::ff_ro iplsdk::lowio iplsdk::ms tm_common::common)
+target_link_libraries(payloadex_661_02g PRIVATE tm_common::crt c utils iplsdk::cache iplsdk::ff_ro iplsdk::lowio iplsdk::ms tm_common::common tm661me_common::rebootpatches)
 target_link_options(payloadex_661_02g PRIVATE -nostdlib -T${CMAKE_CURRENT_BINARY_DIR}/linker.x)
-target_compile_definitions(payloadex_661_02g PRIVATE PSP_MODEL=1)
+target_compile_definitions(payloadex_661_02g PRIVATE PSP_MODEL=1 PAYLOADEX)
 
 add_custom_command(
     TARGET payloadex_661_02g
