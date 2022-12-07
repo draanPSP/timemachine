@@ -157,15 +157,15 @@ int UninstallFlashEmu()
 
 void WaitMS()
 {
-	SceUID fd;
+	SceUID dfd;
 	if (msNotReady)
 	{
 		while (1)
 		{
-			fd = sceIoOpen(MS0 TM_PATH "/nandipl.bin", 1, 0);
-			if (fd >= 0)
+			dfd = sceIoDopen(MS0 TM_PATH);
+			if (dfd >= 0)
 			{
-				sceIoClose(fd);
+				sceIoDclose(dfd);
 				break;
 			}
 #if PSP_FW_VER >= 660
