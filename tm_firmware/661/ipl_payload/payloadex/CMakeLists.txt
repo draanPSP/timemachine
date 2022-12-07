@@ -34,3 +34,18 @@ add_custom_command(
     POST_BUILD
     COMMAND psp-objcopy -O binary payloadex_661_02g payloadex_661_02g.bin
 )
+
+add_executable(payloadex_661_03g)
+add_executable(tmctrl::payloadex_661_03g ALIAS payloadex_661_03g)
+target_sources(payloadex_661_03g PRIVATE main.cpp)
+target_compile_options(payloadex_661_03g PRIVATE -Wno-main)
+target_link_libraries(payloadex_661_03g PRIVATE tm_common::crt c utils iplsdk::cache iplsdk::ff_ro iplsdk::lowio iplsdk::ms tm_common::common tm661me_common::rebootpatches)
+target_link_options(payloadex_661_03g PRIVATE -nostdlib -T${CMAKE_CURRENT_BINARY_DIR}/linker.x)
+target_compile_definitions(payloadex_661_03g PRIVATE PSP_MODEL=2 PAYLOADEX)
+
+add_custom_command(
+    TARGET payloadex_661_03g
+    POST_BUILD
+    COMMAND psp-objcopy -O binary payloadex_661_03g payloadex_661_03g.bin
+)
+

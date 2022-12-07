@@ -49,7 +49,7 @@ int RebootBinDecompressPatched(u8 *dest, int destSize, u8 *src, int unk)
 		int model = sceKernelGetModel();
 		if (model == 0)
 			src = (char *)rebootex_01g;
-		else if (model == 1)
+		else if (model == 1 || model == 2)
 			src = (char *)rebootex_02g;
 
 		destSize = 0x10000;

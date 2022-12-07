@@ -16,6 +16,8 @@
 #define BTCNF_PATH "/kd/pspbtcnf.bin"
 #elif PSP_MODEL == 1
 #define BTCNF_PATH "/kd/pspbtcnf_02g.bin"
+#elif PSP_MODEL == 2
+#define BTCNF_PATH "/kd/pspbtcnf_03g.bin"
 #endif
 
 namespace {
@@ -43,7 +45,7 @@ namespace {
 		if (f_mount(&fs, "ms0:", 1) != FR_OK) {
 			return -1;
 		}
-
+		
 		return 0;
 	}
 

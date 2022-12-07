@@ -108,6 +108,39 @@ static const struct Patches patches = {
 		.SigcheckPatchAddr  = 0x886016b0,
 	},
 #endif
+
+#elif (PSP_MODEL == 2)
+#if defined PAYLOADEX
+	.rebootPatches = {
+        .BootLfatMountPatch	= 0x88604084,
+		.BootLfatOpenPatch	= 0x88604094,
+		.BootLfatReadPatch	= 0x886040fc,
+		.BootLfatClosePatch	= 0x8860411c,
+		.CheckPspConfigPatch= 0x88609fb4,
+		.KdebugPatchAddr	= 0x8860be30,
+		.LfatMountPatchAddr	= 0x8860408c,
+		.LfatSeekPatchAddr1	= 0x886040dc,
+		.LfatSeekPatchAddr2	= 0x886040ec,
+		.LoadCorePatchAddr	= 0x88603574,
+		.HashCheckPatchAddr	= 0x88603b30,
+		.SigcheckPatchAddr  = 0x88600bd8,
+	},
+#elif defined REBOOTEX
+	.rebootPatches = {
+        .BootLfatMountPatch	= 0x88602878,
+		.BootLfatOpenPatch	= 0x8860288c,
+		.BootLfatReadPatch	= 0x886028fc,
+		.BootLfatClosePatch	= 0x88602928,
+		.CheckPspConfigPatch= 0x88605840,
+		.KdebugPatchAddr	= 0x88603948,
+		.LfatMountPatchAddr	= 0x88602884,
+		.LfatSeekPatchAddr1	= 0x886028d8,
+		.LfatSeekPatchAddr2	= 0x886028f0,
+		.LoadCorePatchAddr	= 0x886056f8,
+		.HashCheckPatchAddr	= 0x88607450,
+		.SigcheckPatchAddr  = 0x886016b0,
+	},
+#endif
 #endif
 	.loadCorePatches = {
 		.ModuleOffsetAddr	= 0x00000af8,
