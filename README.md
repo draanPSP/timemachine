@@ -45,7 +45,7 @@ Mathieulh for the original [PSP_IPL_SDK](https://github.com/mathieulh/PSP_IPL_SD
 uOFW team for the firmware reverse-engineering efforts,  
 John-K and artart78 for the IPL decryption code [pspdecrypt](https://github.com/John-K/pspdecrypt),  
 Balika011 for 6.61 IPL patches [DC-M33](https://github.com/balika011/DC-M33/),  
-neur0n and Rahim-US for 6.61 ME [ME](https://github.com/PSP-Archive/minimum_edition).
+neur0n and Rahim-US for [6.61 ME](https://github.com/PSP-Archive/minimum_edition).
 
 # External libraries used
 [Heatshrink](https://github.com/atomicobject/heatshrink) - ISC License  
