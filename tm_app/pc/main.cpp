@@ -29,7 +29,7 @@ void help(const char* exeName) {
     cout << "  -v, --verbose           enable verbose mode (mostly for debugging)" << endl;
     cout << "  -t, --tmdir=DIR         path to TM directory" << endl;
     cout << "  -u, --updir=DIR         path to updater pbps" << endl;
-    cout << "  -V, --version=VER       TM firmware version. Supported versions are: 1.00, 1.00Bogus, 1.50, 2.00, 2.50, 2.60, 2.71SE-C, 2.80, 3.40OE-A" << endl;
+    cout << "  -V, --version=VER       TM firmware version. Supported versions are: 1.00, 1.00Bogus, 1.50, 2.00, 2.50, 2.60, 2.71SE-C, 2.80, 3.40OE-A, 6.61ME" << endl;
     cout << "  -d, --downdaterdir=DIR  path to 1.00 downdater dump. Required for 1.00 and 1.00Bogus firmware installs" << endl;
     cout << "  -b, --bogusfix          install module to fix corrupt eboots in 1.00 Bogus firmware" << endl;
 }
@@ -160,6 +160,11 @@ void extractFirmware(string installPath, string upDir, string version, bool dele
         if (copyIpl && version.compare("150") == 0) {
             extract150Ipl((u8*)&buf[pspOff], psarOff - pspOff, installPath, verbose);
         }
+        else if (copyIpl && version.compare("661") == 0) {
+            fs::copy(installPath + "/PSARDUMPER/stage1_nandipl_01g.bin", installPath + "/nandipl_01g.bin", fs::copy_options::overwrite_existing);
+            fs::copy(installPath + "/PSARDUMPER/stage1_nandipl_02g.ipl", installPath + "/nandipl_02g.bin", fs::copy_options::overwrite_existing);
+            fs::copy(installPath + "/PSARDUMPER/stage1_nandipl_03g.ipl", installPath + "/nandipl_03g.bin", fs::copy_options::overwrite_existing);
+        }
         else if (copyIpl && fs::exists(installPath + "/PSARDUMPER/stage1_psp_ipl.bin"))
             fs::copy(installPath + "/PSARDUMPER/stage1_psp_ipl.bin", installPath + "/nandipl.bin", fs::copy_options::overwrite_existing);
         else if (copyIpl && fs::exists(installPath + "/PSARDUMPER/stage1_psp_nandipl.bin"))
@@ -177,6 +182,19 @@ void extractFirmware(string installPath, string upDir, string version, bool dele
         exit(1);
     }
         
+}
+
+void deleteFiles(string directory, string fileNameRegex) {
+
+    const fs::path dirPath{directory};
+    regex filter (fileNameRegex);
+    for (auto const& dir_entry : fs::directory_iterator{dirPath}) 
+    {
+        auto filePath = dir_entry.path();
+        if (regex_match(filePath.c_str(), filter))
+            fs::remove(filePath);
+    }
+
 }
 
 int main(int argc, char *argv[]) {
@@ -513,6 +531,50 @@ int main(int argc, char *argv[]) {
 
         fs::remove_all(tmpDir);
         fs::remove_all(installDir + "/PSARDUMPER");      
+    }
+    else if (version.compare("6.61ME") == 0) {
+        string installDir = tmDir + "/661";
+        extractFirmware(installDir, upDir, "661", true, true, verbose);
+
+        //Remove files from unsupported models
+        auto filesRegex = ".*_(?!01|02|03)\\d{2}g\\.(bin|dat|prx)";
+        deleteFiles(installDir + "/kd", filesRegex);
+        deleteFiles(installDir + "/vsh/etc", filesRegex);
+
+        WriteFile((installDir + "/tm_mloader.bin").c_str(), (void*)tm_mloader, sizeof(tm_mloader));
+        WriteFile((installDir + "/payload_01g.bin").c_str(), (void*)tm661_payload_01g, sizeof(tm661_payload_01g));
+        WriteFile((installDir + "/payload_02g.bin").c_str(), (void*)tm661_payload_02g, sizeof(tm661_payload_02g));
+        WriteFile((installDir + "/payload_03g.bin").c_str(), (void*)tm661_payload_03g, sizeof(tm661_payload_03g));
+        WriteFile((installDir + "/tmctrl661.prx").c_str(), (void*)tm661_tmctrl661, sizeof(tm661_tmctrl661));
+
+        WriteFile((installDir + "/config.me").c_str(), (void*)tm661_configme, sizeof(tm661_configme));
+        WriteFile((installDir + "/kd/dax9660.prx").c_str(), (void*)tm661_dax9660, sizeof(tm661_dax9660));
+        WriteFile((installDir + "/kd/dcman.prx").c_str(), (void*)tm661_dcman, sizeof(tm661_dcman));
+        WriteFile((installDir + "/kd/emc_sm_updater.prx").c_str(), (void*)tm661_emc_sm_updater, sizeof(tm661_emc_sm_updater));
+        WriteFile((installDir + "/kd/horoscope.prx").c_str(), (void*)tm661_horoscope, sizeof(tm661_horoscope));
+        WriteFile((installDir + "/kd/idmanager.prx").c_str(), (void*)tm661_idmanager, sizeof(tm661_idmanager));
+        WriteFile((installDir + "/kd/inferno.prx").c_str(), (void*)tm661_inferno, sizeof(tm661_inferno));
+        WriteFile((installDir + "/kd/iop.prx").c_str(), (void*)tm661_iop, sizeof(tm661_iop));
+        WriteFile((installDir + "/kd/ipl_update.prx").c_str(), (void*)tm661_ipl_update, sizeof(tm661_ipl_update));
+        WriteFile((installDir + "/kd/isotope.prx").c_str(), (void*)tm661_isotope, sizeof(tm661_isotope));
+        WriteFile((installDir + "/kd/lfatfs_updater.prx").c_str(), (void*)tm661_lfatfs_updater, sizeof(tm661_lfatfs_updater));
+        WriteFile((installDir + "/kd/lflash_fatfmt_updater.prx").c_str(), (void*)tm661_lflash_fatfmt_updater, sizeof(tm661_lflash_fatfmt_updater));
+        WriteFile((installDir + "/kd/libpsardumper.prx").c_str(), (void*)tm661_libpsardumper, sizeof(tm661_libpsardumper));
+        WriteFile((installDir + "/kd/pspbtdnf.bin").c_str(), (void*)tm661_pspbtdnf, sizeof(tm661_pspbtdnf));
+        WriteFile((installDir + "/kd/pspbtdnf_02g.bin").c_str(), (void*)tm661_pspbtdnf_02g, sizeof(tm661_pspbtdnf_02g));
+        WriteFile((installDir + "/kd/pspbtjnf.bin").c_str(), (void*)tm661_pspbtjnf, sizeof(tm661_pspbtjnf));
+        WriteFile((installDir + "/kd/pspbtjnf_02g.bin").c_str(), (void*)tm661_pspbtjnf_02g, sizeof(tm661_pspbtjnf_02g));
+        WriteFile((installDir + "/kd/pspbtjnf_03g.bin").c_str(), (void*)tm661_pspbtjnf_03g, sizeof(tm661_pspbtjnf_03g));
+        WriteFile((installDir + "/kd/pspdecrypt.prx").c_str(), (void*)tm661_pspdecrypt, sizeof(tm661_pspdecrypt));
+        WriteFile((installDir + "/kd/pulsar.prx").c_str(), (void*)tm661_pulsar, sizeof(tm661_pulsar));
+        WriteFile((installDir + "/kd/systemctrl_01g.prx").c_str(), (void*)tm661_systemctrl_01g, sizeof(tm661_systemctrl_01g));
+        WriteFile((installDir + "/kd/systemctrl_02g.prx").c_str(), (void*)tm661_systemctrl_02g, sizeof(tm661_systemctrl_02g));
+        WriteFile((installDir + "/kd/systemctrl_03g.prx").c_str(), (void*)tm661_systemctrl_03g, sizeof(tm661_systemctrl_03g));
+        WriteFile((installDir + "/kd/usbdev.prx").c_str(), (void*)tm661_usbdev, sizeof(tm661_usbdev));
+        WriteFile((installDir + "/kd/vshctrl_02g.prx").c_str(), (void*)tm661_vshctrl_02g, sizeof(tm661_vshctrl_02g));
+        WriteFile((installDir + "/vsh/module/recovery.prx").c_str(), (void*)tm661_recovery, sizeof(tm661_recovery));
+        WriteFile((installDir + "/vsh/module/resurrection.prx").c_str(), (void*)tm661_resurrection, sizeof(tm661_resurrection));
+        WriteFile((installDir + "/vsh/module/satellite.prx").c_str(), (void*)tm661_satellite, sizeof(tm661_satellite));
     }
     else {
         cerr << "Unsupported version " << version << "!" << endl;

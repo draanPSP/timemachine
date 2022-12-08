@@ -604,7 +604,7 @@ int pspDecryptPSAR(u8 *dataPSAR, u32 size, std::string outdir, bool extractOnly,
                         szDataPath += std::string(modelNum);
                     }
                     szDataPath += "_files_table.bin";
-                    //found = 1;
+                    found = 1;
                     break;
                 }
             }
