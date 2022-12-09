@@ -26,7 +26,6 @@ namespace {
 	struct PayloadHeader {
 		u32 payload_addr;     //where to put the payload?
 		u32 ipl_addr;         //where to put the Sony IPL?
-		u32 payload_is_entry; //Jump to payload or IPL?
 	};
 
 	inline u32 _makeJ(void const *addr) {
@@ -231,18 +230,13 @@ int main() {
 	patchPoint0[1] = 0;
 
 	if constexpr (isDebug) {
-		if (header.payload_is_entry) {
-			printf("Booting Payload %x\n", header.payload_addr);		
-		}
-		else {
-			printf("Booting IPL %x\n", header.ipl_addr);
-		}
+		printf("Booting IPL %x\n", header.ipl_addr);
 	}
 
 	iplKernelDcacheWritebackInvalidateAll();
 	iplKernelIcacheInvalidateAll();
 
-	sdkSync();		
+	sdkSync();
 
-	_jumpTo(header.payload_is_entry ? header.payload_addr : header.ipl_addr);
+	_jumpTo(header.ipl_addr);
 }

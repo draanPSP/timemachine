@@ -2,7 +2,7 @@ add_subdirectory(payloadex)
 
 get_target_property(LINKER_SCRIPT tm_common::linker_script INTERFACE_SOURCES)
 
-set(LOAD_ADDR 0x040E0000)
+set(LOAD_ADDR 0x040D6000)
 
 configure_file(
     "${LINKER_SCRIPT}"
@@ -37,9 +37,8 @@ foreach(GEN 1 2 3)
         COMMAND psp-objcopy -O binary ${EXEC_NAME} ${EXEC_NAME}.bin
         COMMAND $<TARGET_PROPERTY:make_ipl_payload,EXEC>
             --input_payload ${EXEC_NAME}.bin
-            --payload_addr 0x040E0000
+            --payload_addr 0x040D6000
             --ipl_addr 0x040EC000
-            --payload_is_entry
             --output payload_0${GEN}g.bin
     )
 endforeach()
