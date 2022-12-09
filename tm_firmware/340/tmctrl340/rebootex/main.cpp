@@ -74,7 +74,7 @@ namespace {
 			strcpy(filename, "/tmctrl340.prx");
 		}
 
-		strcpy(path, "/TM/340OE");
+		strcpy(path, TM_PATH);
 		strcat(path, filename);
 
 		if (f_open(&fp, path, FA_OPEN_EXISTING | FA_READ) == FR_OK) {

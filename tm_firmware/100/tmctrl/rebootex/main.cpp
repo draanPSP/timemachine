@@ -51,7 +51,7 @@ namespace {
 			strcpy(filename, "/tmctrl100.prx");
 		}
 
-		strcpy(path, "/TM/100");
+		strcpy(path, TM_PATH);
 		strcat(path, filename);
 
 		if (f_open(&fp, path, FA_OPEN_EXISTING | FA_READ) == FR_OK) {

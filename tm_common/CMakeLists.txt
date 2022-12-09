@@ -25,3 +25,9 @@ add_library(tm_common::flash_emu ALIAS flash_emu)
 
 target_include_directories(flash_emu INTERFACE include)
 target_sources(flash_emu INTERFACE flashemu.c)
+
+add_library(moduleutils INTERFACE)
+add_library(tm_common::moduleutils ALIAS moduleutils)
+
+target_include_directories(moduleutils INTERFACE include)
+target_sources(moduleutils INTERFACE moduleUtils.cpp)

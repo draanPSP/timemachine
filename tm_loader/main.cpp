@@ -24,8 +24,8 @@ char payloadPath[2*TM_MAX_PATH_LENGTH];
 
 namespace {
 	struct PayloadHeader {
-		u32 payload_addr; //where to put the payload?
-		u32 ipl_addr;     //where to put the Sony IPL?
+		u32 payload_addr;     //where to put the payload?
+		u32 ipl_addr;         //where to put the Sony IPL?
 	};
 
 	inline u32 _makeJ(void const *addr) {

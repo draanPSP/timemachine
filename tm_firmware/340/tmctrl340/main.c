@@ -7,10 +7,11 @@
 #include <pspsysevent.h>
 #include <psputilsforkernel.h>
 
-#include <pspmacro.h> 
+#include <pspmacro.h>
+#include <moduleUtils.h>
+#include <flashemu.h>
 
 #include "main.h"
-#include <flashemu.h>
 #include <rebootex.h>
 
 PSP_MODULE_INFO("TimeMachine_Control", PSP_MODULE_KERNEL | PSP_MODULE_SINGLE_START | PSP_MODULE_SINGLE_LOAD | PSP_MODULE_NO_STOP, 1, 0);
@@ -37,36 +38,6 @@ extern u32 (* df_dopenPatched)(s32 a0, char* path, s32 a2);
 extern u32 (* df_devctlPatched)(s32 a0, s32 a1, s32 a2, s32 a3);
 
 APRS_EVENT previous = NULL;
-
-u32 GetModuleExportFuncAddr(char *moduleName, char *libraryName, int nid)
-{
-	SceModule2 *mod = (SceModule2 *)sceKernelFindModuleByName(moduleName);
-	if (mod != NULL)
-	{
-		SceLibraryEntryTable *libEntryTable = mod->ent_top;
-		int i;
-
-		if (mod->ent_size <= 0)
-			return 0;
-
-		while ((u32)libEntryTable < ((u32)mod->ent_top + mod->ent_size))
-		{
-			if (strcmp(libEntryTable->libname, libraryName) == 0)
-			{
-				/* Find the specifed NID and it's offset with the entry table */
-				for (i = 0; i < libEntryTable->stubcount; i++)
-				{
-					if (((int *)libEntryTable->entrytable)[i] == nid)
-					{
-						return ((u32 *)libEntryTable->entrytable)[libEntryTable->stubcount + libEntryTable->vstubcount + i];
-					}
-				}
-			}
-			libEntryTable = (SceLibraryEntryTable *)((u32)libEntryTable + (libEntryTable->len * 4));
-		}
-	}
-	return 0;
-}
 
 int RebootBinDecompressPatched(u8 *dest, int destSize, u8 *src, int unk)
 {

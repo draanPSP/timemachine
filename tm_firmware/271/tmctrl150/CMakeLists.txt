@@ -3,8 +3,8 @@ build_prx(tmctrl271_150 EXPORTS exports.exp)
 
 target_sources(tmctrl271_150 PRIVATE main.c)
 target_compile_options(tmctrl271_150 PRIVATE -fshort-wchar -Wno-address-of-packed-member)
-target_link_libraries(tmctrl271_150 PRIVATE utils tm_common::flash_emu pspdisplay_driver_weak pspreg_driver_weak pspsdk pspkernel_sceIdStorage_weak)
-add_compile_definitions(PSP_FW_VERSION=150 TM_MS_PATH="ms0:/TM/271SE")
+target_link_libraries(tmctrl271_150 PRIVATE utils tm_common::moduleutils tm_common::flash_emu pspdisplay_driver_weak pspreg_driver_weak pspsdk pspkernel_sceIdStorage_weak)
+add_compile_definitions(PSP_FW_VERSION=150)
 
 add_custom_command(OUTPUT rebootex.h
     DEPENDS tmctrl::rebootex271_01g

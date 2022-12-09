@@ -54,6 +54,7 @@
 #define ORI(rt, rs, imm) MIPS_ITYPE(0x0D, rs, rt, imm)
 #define LW(rt, rs, imm) MIPS_ITYPE(0x23, rs, rt, imm)
 #define SW(rt, rs, imm) MIPS_ITYPE(0x2B, rs, rt, imm)
+#define ADDI(rt, rs, imm) MIPS_ITYPE(0x08, rs, rt, imm)
 #define ADDIU(rt, rs, imm) MIPS_ITYPE(0x09, rs, rt, imm)
 #define LI(rt, imm) ADDIU(rt, GPREG_ZR, imm)
 #define EXTRACT_IMM(imm) (imm & 0xFFFF)
