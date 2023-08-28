@@ -3,20 +3,20 @@
 
 #include <hw.h>
 
-constexpr inline u32 TM_MAX_PATH_LENGTH = 64;
-constexpr inline u32 TM_CONFIG_SECTOR = 1;
+constexpr inline std::uint32_t TM_MAX_PATH_LENGTH = 64;
+constexpr inline std::uint32_t TM_CONFIG_SECTOR = 1;
 
 constexpr inline bool isDebug = false;
 
 //Store the model number in a temporary memory location
 //that won't be overwritten very soon, for example
 //last dword of the scratchpad memory 
-inline void tmTempSetModel(u32 const model) {
+inline void tmTempSetModel(std::uint32_t const model) {
 	memoryK0(0x00013FFC) = model;
 }
 
 //Fetch the model number from the temporary memory location
-inline u32 tmTempGetModel() {
+inline std::uint32_t tmTempGetModel() {
 	return memoryK0(0x00013FFC);
 }
 

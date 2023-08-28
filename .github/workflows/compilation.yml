@@ -1,0 +1,30 @@
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/pspdev/pspsdk:latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        apk add python3 python3-dev py3-pip
+        pip3 install pycryptodome ecdsa heatshrink2
+
+    - name: Compile TimeMachine
+      run: |
+        psp-cmake -S . -B build
+        cmake --build build
+        cmake --install build --prefix .
+
+    - name: Compress release
+      run: |
+        tar -zcvf release.tar.gz release
+  
+    - name: Upload artifacts
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-${{ github.sha }}
+        path: release.tar.gz

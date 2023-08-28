@@ -1,11 +1,13 @@
 #ifndef TM_TABLEHASH
 #define TM_TABLEHASH
 
+#include <cstdint>
+
 //Key table from https://github.com/John-K/pspdecrypt/blob/master/ipl_decrypt.cpp
 
 typedef struct {
-	u32 idx;
-	u32 key[8];
+	std::uint32_t idx;
+	std::uint32_t key[8];
 } KeyEntry;
 
 const KeyEntry g_KeyTable[] = {
@@ -60,6 +62,6 @@ const KeyEntry g_KeyTable[] = {
 	{0xb331d7a6,	0x0163e80e, 0x3175e31e, 0xe5134ea3, 0x03d1bb84, 0x49cd898d, 0x41f3047a, 0x7de563d1, 0x00000000}  // 6.60 testing tool
 };
 
-constexpr inline u32 HASH_ROWS = sizeof(g_KeyTable)/sizeof(g_KeyTable[0]);
+constexpr inline std::uint32_t HASH_ROWS = sizeof(g_KeyTable)/sizeof(g_KeyTable[0]);
 
 #endif //TM_TABLEHASH

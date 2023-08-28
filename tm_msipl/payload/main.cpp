@@ -12,12 +12,12 @@
 
 #include "performBoot.h"
 
-constexpr inline u32 FILE_BUFFER_SIZE = 1024;
-constexpr inline u32 LINE_BUFFER_SIZE = 256;
-constexpr inline u32 BUTTON_BUFFER_SIZE = 128;
-constexpr inline u32 SECTOR_BUFFER_SIZE = 512;
+constexpr inline std::uint32_t FILE_BUFFER_SIZE = 1024;
+constexpr inline std::uint32_t LINE_BUFFER_SIZE = 256;
+constexpr inline std::uint32_t BUTTON_BUFFER_SIZE = 128;
+constexpr inline std::uint32_t SECTOR_BUFFER_SIZE = 512;
 
-constexpr inline u32 BUFFER_START_ADDR = 0x40E0000;
+constexpr inline std::uint32_t BUFFER_START_ADDR = 0x40E0000;
 
 auto const g_FileBuffer = reinterpret_cast<char*>(BUFFER_START_ADDR);
 auto const g_LineBuffer = reinterpret_cast<char*>(BUFFER_START_ADDR+FILE_BUFFER_SIZE);
@@ -50,7 +50,7 @@ int main() {
 
 	tmTempSetModel(sdkKernelGetModel(iplSysregGetTachyonVersion(), iplSysconGetBaryonVersion()));
 
-	auto const resetPtr = reinterpret_cast<u32*>(0xBC10004C);
+	auto const resetPtr = reinterpret_cast<std::uint32_t*>(0xBC10004C);
 
 	if constexpr (isDebug) {
 		printf("START\n");
@@ -76,7 +76,7 @@ int main() {
 		// printf("jumpToIpl %x\n", jumpToIpl);
 	}
 
-	u32 wakeUpFactor = 0;
+	std::uint32_t wakeUpFactor = 0;
 
 	iplSysconGetWakeUpFactor(&wakeUpFactor);
 
@@ -128,7 +128,7 @@ int main() {
 		bootFromNand(g_ConfigBuffer);
 	}
 
-	u32 bytes_read;
+	std::uint32_t bytes_read;
 
 	//Read as much of the file as the buffer allows
 	if (f_read(&fp, g_FileBuffer, FILE_BUFFER_SIZE, &bytes_read) != FR_OK) {
@@ -145,7 +145,7 @@ int main() {
 
 	f_close(&fp);
 
-	u32 pos = 0;
+	std::uint32_t pos = 0;
 
 	while (pos < FILE_BUFFER_SIZE) {
 		//We have reached the end of the file, end the processing
@@ -154,8 +154,8 @@ int main() {
 		}
 
 		//Read current line
-		u32 line_length = 0;
-		s32 comment_at = -1;
+		std::uint32_t line_length = 0;
+		std::int32_t comment_at = -1;
 		while (pos+line_length < FILE_BUFFER_SIZE) {
 			// printf("%c\n", g_FileBuffer[pos+line_length]);
 			//UNIX newline character combo
@@ -196,7 +196,7 @@ int main() {
 		}
 
 		//Find '=' token to later parse IPL path regardless if button parsing is interrupted by an error or not
-		u32 equals_pos;
+		std::uint32_t equals_pos;
 		for (equals_pos = 0; equals_pos < line_length; equals_pos++) {
 			if (g_LineBuffer[equals_pos] == '=') {
 				break;
@@ -211,8 +211,8 @@ int main() {
 		g_LineBuffer[line_length] = '\0';
 
 		//Parse buttons
-		u32 selection = 0;
-		u32 button_length = 0, line_pos = 0;
+		std::uint32_t selection = 0;
+		std::uint32_t button_length = 0, line_pos = 0;
 		while (line_pos+button_length < line_length) {
 			if (g_LineBuffer[line_pos+button_length] == ' ' || g_LineBuffer[line_pos+button_length] == '+') {
 				//Whole button name was read. NULL-terminate it and check if it matches any of the valid buttons
@@ -289,7 +289,7 @@ int main() {
 		}
 
 		//Look for the other '"'
-		u32 endpos;
+		std::uint32_t endpos;
 		for (endpos = line_pos+1; endpos < line_length; ++endpos) {
 			if (g_LineBuffer[endpos] == '"') {
 				break;
@@ -301,7 +301,7 @@ int main() {
 		}
 
 		if constexpr (isDebug) {
-			for(u32 i = 0; i < line_length; i++) {
+			for(std::uint32_t i = 0; i < line_length; i++) {
 				printf("%c", g_LineBuffer[i]);
 			}
 			printf("\n");
@@ -312,7 +312,7 @@ int main() {
 		//Do we have a match between the config line and pressed buttons?
 		if ((pad.Buttons & selection) == selection) {
 			//Copy the IPL as (potential) boot target
-			u32 const size = endpos - (line_pos+1);
+			std::uint32_t const size = endpos - (line_pos+1);
 			strncpy(g_ConfigBuffer, &g_LineBuffer[line_pos+1], size > TM_MAX_PATH_LENGTH ? TM_MAX_PATH_LENGTH : size);
 			g_ConfigBuffer[size] = '\0';
 

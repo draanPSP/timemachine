@@ -22,3 +22,5 @@ add_custom_command(
     COMMAND $<TARGET_PROPERTY:make_ms_ipl,EXEC> --legacy --window_sz2 ${HEATSHRINK_WINDOW_SIZE} --lookahead_sz2 ${HEATSHRINK_LOOKAHEAD_SIZE} --input_loader $<TARGET_PROPERTY:loader_legacy,OUTPUT_FILE> --input_payload $<TARGET_PROPERTY:payload_legacy,OUTPUT_FILE> --output ${PROJECT_NAME}_legacy.bin
     DEPENDS loader_legacy payload_legacy
 )
+
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.bin ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_legacy.bin DESTINATION release/ms_ipl)

@@ -9,9 +9,9 @@
 #include <cstring>
 #include <type_traits>
 
-constexpr inline u32 IPL_MAX_SIZE = 0x1000000;
+constexpr inline std::uint32_t IPL_MAX_SIZE = 0x1000000;
 
-constexpr inline u32 SECTOR_SIZE = 512;
+constexpr inline std::uint32_t SECTOR_SIZE = 512;
 
 char g_ConfigBuffer[SECTOR_SIZE];
 
@@ -24,18 +24,18 @@ char payloadPath[2*TM_MAX_PATH_LENGTH];
 
 namespace {
 	struct PayloadHeader {
-		u32 payload_addr;     //where to put the payload?
-		u32 ipl_addr;         //where to put the Sony IPL?
+		std::uint32_t payload_addr;     //where to put the payload?
+		std::uint32_t ipl_addr;         //where to put the Sony IPL?
 	};
 
-	inline u32 _makeJ(void const *addr) {
-		return 0x08000000 | ((reinterpret_cast<u32>(addr) & 0x0ffffffc) >> 2);
+	inline std::uint32_t _makeJ(void const *addr) {
+		return 0x08000000 | ((reinterpret_cast<std::uint32_t>(addr) & 0x0ffffffc) >> 2);
 	}
 
-	inline u32 const *_findJrT9Forwards(u32 const *code, u32 const maxLength) {
-		constexpr u32 jra_ra_instr = 0x03200008;
+	inline std::uint32_t const *_findJrT9Forwards(std::uint32_t const *code, std::uint32_t const maxLength) {
+		constexpr std::uint32_t jra_ra_instr = 0x03200008;
 
-		for(u32 i = 0; i < maxLength; ++i) {
+		for(std::uint32_t i = 0; i < maxLength; ++i) {
 			if (code[i] == jra_ra_instr) {
 				return &code[i];
 			}
@@ -44,7 +44,7 @@ namespace {
 		return nullptr;
 	}
 
-	[[noreturn]] inline void _jumpTo(u32 const entryPoint) {
+	[[noreturn]] inline void _jumpTo(std::uint32_t const entryPoint) {
 		using v_v_function_t = std::add_pointer_t<void()>;
 		auto const jump = reinterpret_cast<v_v_function_t const>(entryPoint);
 
@@ -85,7 +85,7 @@ int main() {
 		return -1;
 	}
 
-	auto const lastSlashPos = static_cast<u32>(lastSlashPtr - g_ConfigBuffer);
+	auto const lastSlashPos = static_cast<std::uint32_t>(lastSlashPtr - g_ConfigBuffer);
 
 	strncpy(iplPath, g_ConfigBuffer, lastSlashPos+1);
 	strncpy(payloadPath, g_ConfigBuffer, lastSlashPos+1);
@@ -173,7 +173,7 @@ int main() {
 		return -1;
 	}
 
-	u32 bytesRead;
+	std::uint32_t bytesRead;
 
 	PayloadHeader header;
 
@@ -216,7 +216,7 @@ int main() {
 	}
 
 	//Replace jump to Sony stage2 with jump to our payload
-	auto const memory = reinterpret_cast<u32*>(header.ipl_addr);
+	auto const memory = reinterpret_cast<std::uint32_t*>(header.ipl_addr);
 	auto const jrt9_addr = _findJrT9Forwards(memory, 0x1000);
 
 	if constexpr (isDebug) {
@@ -224,7 +224,7 @@ int main() {
 	}
 
 	auto const entryPtr = reinterpret_cast<void const*>(header.payload_addr);
-	auto const patchPoint0 = const_cast<u32*>(jrt9_addr);
+	auto const patchPoint0 = const_cast<std::uint32_t*>(jrt9_addr);
 
 	patchPoint0[0] = _makeJ(entryPtr);
 	patchPoint0[1] = 0;

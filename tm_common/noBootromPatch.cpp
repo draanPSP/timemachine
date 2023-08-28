@@ -5,22 +5,22 @@
 #include <tableHash.h>
 
 namespace {
-	constexpr inline u32 JAL_TYPE = 0x0C000000;
-	constexpr inline u32 LW_TYPE = 0x8C000000;
-	constexpr inline u32 LUI_TYPE = 0x3C000000;
+	constexpr inline std::uint32_t JAL_TYPE = 0x0C000000;
+	constexpr inline std::uint32_t LW_TYPE = 0x8C000000;
+	constexpr inline std::uint32_t LUI_TYPE = 0x3C000000;
 
-	inline bool _isInstructionType6Bits(u32 const *code, u32 const type) {
+	inline bool _isInstructionType6Bits(std::uint32_t const *code, std::uint32_t const type) {
 		return (code[0] & 0xFC000000) == type;
 	}
 
-	inline bool _isInstructionType11Bits(u32 const *code, u32 const type) {
+	inline bool _isInstructionType11Bits(std::uint32_t const *code, std::uint32_t const type) {
 		return (code[0] & 0xFFE00000) == type;
 	}
 
-	inline u32 const *_findCtc0T017Forwards(u32 const *code, u32 const maxLength) {
-		constexpr u32 ctc0_t0_17_instr = 0x40C88800;
+	inline std::uint32_t const *_findCtc0T017Forwards(std::uint32_t const *code, std::uint32_t const maxLength) {
+		constexpr std::uint32_t ctc0_t0_17_instr = 0x40C88800;
 
-		for(u32 i = 0; i < maxLength; ++i) {
+		for(std::uint32_t i = 0; i < maxLength; ++i) {
 			if (code[i] == ctc0_t0_17_instr) {
 				return &code[i];
 			}
@@ -29,8 +29,8 @@ namespace {
 		return nullptr;
 	}
 
-	inline u32 const *_findJalForwards(u32 const *code, u32 const maxLength) {
-		for(u32 i = 0; i < maxLength; ++i) {
+	inline std::uint32_t const *_findJalForwards(std::uint32_t const *code, std::uint32_t const maxLength) {
+		for(std::uint32_t i = 0; i < maxLength; ++i) {
 			if (_isInstructionType6Bits(&code[i], JAL_TYPE)) {
 				return &code[i];
 			}
@@ -39,10 +39,10 @@ namespace {
 		return nullptr;
 	}
 
-	inline u32 const *_findJrRaForwards(u32 const *code, u32 const maxLength) {
-		constexpr u32 jra_ra_instr = 0x03E00008;
+	inline std::uint32_t const *_findJrRaForwards(std::uint32_t const *code, std::uint32_t const maxLength) {
+		constexpr std::uint32_t jra_ra_instr = 0x03E00008;
 
-		for(u32 i = 0; i < maxLength; ++i) {
+		for(std::uint32_t i = 0; i < maxLength; ++i) {
 			if (code[i] == jra_ra_instr) {
 				return &code[i];
 			}
@@ -51,8 +51,8 @@ namespace {
 		return nullptr;
 	}
 
-	inline u32 const *_findLuiForwards(u32 const *code, u32 const maxLength) {
-		for(u32 i = 0; i < maxLength; ++i) {
+	inline std::uint32_t const *_findLuiForwards(std::uint32_t const *code, std::uint32_t const maxLength) {
+		for(std::uint32_t i = 0; i < maxLength; ++i) {
 			if (_isInstructionType11Bits(&code[i], LUI_TYPE)) {
 				return &code[i];
 			}
@@ -61,8 +61,8 @@ namespace {
 		return nullptr;
 	}
 
-	inline u32 const *_findFirstNonLwBackwards(u32 const *code, s32 const maxLength) {
-		for(s32 i = 0; i >= -maxLength; --i) {
+	inline std::uint32_t const *_findFirstNonLwBackwards(std::uint32_t const *code, std::int32_t const maxLength) {
+		for(std::int32_t i = 0; i >= -maxLength; --i) {
 			if (!_isInstructionType6Bits(&code[i], LW_TYPE)) {
 				return &code[i];
 			}
@@ -71,35 +71,35 @@ namespace {
 		return nullptr;
 	}
 
-	inline u32 const *_extractBranchAddr(u32 const *code) {
+	inline std::uint32_t const *_extractBranchAddr(std::uint32_t const *code) {
 		auto const offset = (code[0] & 0xFFFF);
 		return &code[offset+1];
 	}
 
-	inline u32 _extractAddiu(u32 const *code) {
+	inline std::uint32_t _extractAddiu(std::uint32_t const *code) {
 		return (code[0] & 0xFFFF);
 	}
 
-	inline u32 const *_extractJalAddr(u32 const *code) {
-		return reinterpret_cast<u32* const>((code[0] & 0x3FFFFFF) << 2);
+	inline std::uint32_t const *_extractJalAddr(std::uint32_t const *code) {
+		return reinterpret_cast<std::uint32_t* const>((code[0] & 0x3FFFFFF) << 2);
 	}
 
-	inline u32 _makeJ(void const *addr) {
-		return 0x08000000 | ((reinterpret_cast<u32>(addr) & 0x0ffffffc) >> 2);
+	inline std::uint32_t _makeJ(void const *addr) {
+		return 0x08000000 | ((reinterpret_cast<std::uint32_t>(addr) & 0x0ffffffc) >> 2);
 	}
 
-	inline u32 _makeJal(void const *addr) {
-		return 0x0C000000 | ((reinterpret_cast<u32>(addr) & 0x0ffffffc) >> 2);
+	inline std::uint32_t _makeJal(void const *addr) {
+		return 0x0C000000 | ((reinterpret_cast<std::uint32_t>(addr) & 0x0ffffffc) >> 2);
 	}
 }
 
-void sha256hmacPatched(u8 const *key, u32 keylen, u8 const *data, u32 datalen, u8 *out) {
+void sha256hmacPatched(std::uint8_t const *key, std::uint32_t keylen, std::uint8_t const *data, std::uint32_t datalen, std::uint8_t *out) {
 	if constexpr (isDebug) {
 		printf("0x%x 0x%x 0x%x\n", key, data, out);
 	}
 
-	auto const bit32_key = reinterpret_cast<u32 const*>(key);
-	auto const bit32_data = reinterpret_cast<u32 const*>(data);
+	auto const bit32_key = reinterpret_cast<std::uint32_t const*>(key);
+	auto const bit32_data = reinterpret_cast<std::uint32_t const*>(data);
 
 	if constexpr (isDebug) {
 		printf("0x%x 0x%x\n", *bit32_key, *bit32_data);
@@ -107,7 +107,7 @@ void sha256hmacPatched(u8 const *key, u32 keylen, u8 const *data, u32 datalen, u
 
 	auto const key_idx = *bit32_key;
 
-	for(u32 i = 0; i < HASH_ROWS; ++i) {
+	for(std::uint32_t i = 0; i < HASH_ROWS; ++i) {
 		if (key_idx == g_KeyTable[i].idx) {
 			if constexpr (isDebug) {
 				printf("Found matching hmac 0x%x\n", g_KeyTable[i].idx);
@@ -125,8 +125,8 @@ void sha256hmacPatched(u8 const *key, u32 keylen, u8 const *data, u32 datalen, u
 }
 
 void noBootromPatch(void *entryPoint) {
-	auto const memory = reinterpret_cast<u32*>(entryPoint);
-	auto const offset = reinterpret_cast<u32>(entryPoint);
+	auto const memory = reinterpret_cast<std::uint32_t*>(entryPoint);
+	auto const offset = reinterpret_cast<std::uint32_t>(entryPoint);
 
 	//Find "ctc0 $t0, $17"
 	auto const ctc0_addr = _findCtc0T017Forwards(memory, 500);
@@ -163,7 +163,7 @@ void noBootromPatch(void *entryPoint) {
 
 	//Extract and reassemble the address
 	auto const ori_val = _extractAddiu(ori_pos);
-	auto const branch_addr = reinterpret_cast<u32 const*>(offset | ori_val);
+	auto const branch_addr = reinterpret_cast<std::uint32_t const*>(offset | ori_val);
 
 	//Find first call that occurs in the binary (will be needed later)
 	auto const first_call_addr = _findJalForwards(memory, 0x10000);
@@ -178,9 +178,9 @@ void noBootromPatch(void *entryPoint) {
 	//essentially no-op (writes the same value to the register back)
 	//This prevents the correct bootrom timestamp 
 	//(set by our loader) to be overwritten with gargabe
-	auto const patchPoint0 = const_cast<u32*>(ctc0_addr-1);
+	auto const patchPoint0 = const_cast<std::uint32_t*>(ctc0_addr-1);
 
-	constexpr u32 cfc0_t0_17_instr = 0x40488800; //"cfc0, $t0, $17"
+	constexpr std::uint32_t cfc0_t0_17_instr = 0x40488800; //"cfc0, $t0, $17"
 	patchPoint0[0] = cfc0_t0_17_instr;
 
 	//Second universal patch (1st version) -- commented out
@@ -188,7 +188,7 @@ void noBootromPatch(void *entryPoint) {
 	//Replace it with an unconditional jump
 	//to the place where CPU would land after
 	//the reset handler (branch_addr)
-	auto const patchPoint1 = const_cast<u32*>(lui_pos);
+	auto const patchPoint1 = const_cast<std::uint32_t*>(lui_pos);
 
 	// if constexpr (isDebug) {
 	// 	printf("makeJ 0x%x\n", _makeJ(branch_addr));
@@ -199,7 +199,7 @@ void noBootromPatch(void *entryPoint) {
 
 	//Second universal patch (2nd version)
 	//Replace 0xBFD0 in "lui $t0, 0xBFD0" with 0xBFC0 and just allow PSP to reset
-	//constexpr u32 lui_t0_0xBFC0 = 0x3C08BFC0; //lui $t0, 0xBFC0
+	//constexpr std::uint32_t lui_t0_0xBFC0 = 0x3C08BFC0; //lui $t0, 0xBFC0
 	patchPoint1[0] = (patchPoint1[0] & 0xFFFF0000) | 0xBFC0;
 
 	//If the first call we found occurs somewhere after "ctc0 $t0, $17",
@@ -267,7 +267,7 @@ void noBootromPatch(void *entryPoint) {
 		//First recent IPL patch
 		//We replce it with our function that will provide a pre-calculated key
 		//IPL no longer needs bootrom data to decrypt stage2!
-		auto const patchPoint2 = const_cast<u32*>(sha256hmac_addr);
+		auto const patchPoint2 = const_cast<std::uint32_t*>(sha256hmac_addr);
 		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(sha256hmacPatched));
 	} else {
 		if constexpr (isDebug) {
@@ -291,7 +291,7 @@ void noBootromPatch(void *entryPoint) {
 
 		//First recent IPL patch
 		//We replce it with our function that will provide a pre-calculated key
-		auto const patchPoint2 = const_cast<u32*>(sha256hmac_addr);
+		auto const patchPoint2 = const_cast<std::uint32_t*>(sha256hmac_addr);
 		patchPoint2[0] = _makeJal(reinterpret_cast<void const *>(sha256hmacPatched));
 
 		//Second recent IPL patch -- not needed
@@ -299,7 +299,7 @@ void noBootromPatch(void *entryPoint) {
 		//calling the older decryption function which does the actual work
 		//Because we provide the pre-computed key, we do not need it,
 		//we can call the older decryption function directly
-		// auto const patchPoint3 = const_cast<u32*>(first_call_addr);
+		// auto const patchPoint3 = const_cast<std::uint32_t*>(first_call_addr);
 		// patchPoint3[0] = _makeJal(decrypt_addr);
 	}
 }
